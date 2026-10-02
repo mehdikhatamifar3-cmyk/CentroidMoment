@@ -207,7 +207,7 @@ def generate_problem(level, seed):
 
 def region_figure(data, strip_position, show_area_centroid=False, title=None, stage="all"):
     """Draw the region from its exact equations with transparent, non-overlapping annotations."""
-    fig, ax = plt.subplots(figsize=(8.0, 5.6))
+    fig, ax = plt.subplots(figsize=(7.6, 5.2))
     blue, navy, green = "#38bdf8", "#0047AB", "#00A651"
     orange, purple, red = "#FF7A00", "#7A00CC", "#E00034"
     lower, upper = map(float, (data["lower"], data["upper"]))
@@ -280,7 +280,7 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
     ax.set_aspect("equal", adjustable="datalim")
     ax.legend(loc="upper right", fontsize=8, framealpha=.90)
     if title: ax.set_title(title, weight="bold", pad=9, fontsize=11)
-    fig.tight_layout(pad=1.5)
+    fig.subplots_adjust(left=0.08,right=0.98,top=0.90,bottom=0.10)
     return fig
 
 def render_colour_key():
@@ -333,7 +333,7 @@ def render_static_diagram(data, title, show_centroid=True):
 def render_solution_process_figures(data):
     """Show a compact visual sequence without adding duplicate interactive widgets."""
     position = float(data["lower"] + 0.58 * (data["upper"] - data["lower"]))
-    c1, c2, c3 = st.columns(3, gap="medium")
+    c1, c2 = st.columns(2, gap="medium")
     with c1:
         st.markdown("#### 1. Boundaries and strip")
         st.pyplot(
@@ -346,12 +346,8 @@ def render_solution_process_figures(data):
             region_figure(data, position, False, "Locate the strip centroid", stage="centroid"),
             use_container_width=True,
         )
-    with c3:
-        st.markdown("#### 3. Complete-area centroid")
-        st.pyplot(
-            region_figure(data, position, True, "Integrate over the region", stage="all"),
-            use_container_width=True,
-        )
+    st.markdown("#### 3. Complete-area centroid")
+    st.pyplot(region_figure(data, position, True, "Integrate over the region", stage="all"), use_container_width=True)
 
 def render_learn_tab():
     st.markdown("## Learn the method")
@@ -382,7 +378,7 @@ def render_learn_tab():
         render_static_diagram(demo, "Vertical strip: thickness dx, height top minus bottom", False)
         st.latex(r"dA=[y_T(x)-y_B(x)]\,dx")
         st.latex(r"\tilde{x}=x,\qquad \tilde{y}=\frac{y_T+y_B}{2}")
-        st.write("Choose this cut when the upper and lower boundaries are naturally written as functions of x. The integration limits are x-coordinates.")
+        st.write("You should usually choose this cut when the upper and lower boundaries are already given as functions of x. The integration limits are x-coordinates.")
         st.markdown("##### How the second-moment formulas are obtained")
         st.write("For the moment about the y-axis, every point in the thin vertical strip is at approximately the same x-coordinate. Starting from the definition:")
         st.latex(r"I_y=\int_A x^2\,dA")
@@ -398,7 +394,7 @@ def render_learn_tab():
         render_static_diagram(demo, "Horizontal strip: thickness dy, width right minus left", False)
         st.latex(r"dA=[x_R(y)-x_L(y)]\,dy")
         st.latex(r"\tilde{x}=\frac{x_R+x_L}{2},\qquad \tilde{y}=y")
-        st.write("Choose this cut when the right and left boundaries are naturally written as functions of y. The integration limits are y-coordinates.")
+        st.write("You should usually choose this cut when the right and left boundaries are already given as functions of y. The integration limits are y-coordinates.")
         st.markdown("##### How the second-moment formulas are obtained")
         st.write("For the moment about the x-axis, every point in the thin horizontal strip is at approximately the same y-coordinate. Starting from the definition:")
         st.latex(r"I_x=\int_A y^2\,dA")
@@ -605,7 +601,8 @@ data = problem["data"]
 st.sidebar.caption(f"Current example: {problem['title']}")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Colour key")
-st.sidebar.markdown("🔵 Complete region  \n🔷 Upper / right boundary  \n🟢 Lower / left boundary  \n🟧 Differential strip  \n🟣 Strip centroid  \n❌ Complete-area centroid  \n⚫ Reference x- and y-axes")
+with st.sidebar:
+    render_colour_key()
 
 labels = {
     "area": ("Area A", "units²"),
