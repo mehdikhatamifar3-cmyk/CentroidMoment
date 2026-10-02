@@ -205,70 +205,83 @@ def generate_problem(level, seed):
     }
 
 
-def region_figure(data, strip_position, show_area_centroid=False, title=None):
-    fig, ax = plt.subplots(figsize=(7.5, 5.2))
-    blue, navy, green = "#93c5fd", "#1d4ed8", "#0f766e"
+def region_figure(data, strip_position, show_area_centroid=False, title=None, stage="all"):
+    """Draw the region from its exact equations with transparent, non-overlapping annotations."""
+    fig, ax = plt.subplots(figsize=(8.2, 5.8))
+    blue, navy, green = "#60a5fa", "#1d4ed8", "#047857"
     orange, purple, red = "#f97316", "#7c3aed", "#dc2626"
     lower, upper = map(float, (data["lower"], data["upper"]))
+    span = max(upper - lower, 1.0)
+    bbox = dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.82)
 
     if data["cut"] == "vertical":
         values = np.linspace(lower, upper, 500)
         top = np.asarray(sp.lambdify(x, data["top"], "numpy")(values), dtype=float) + np.zeros_like(values)
         bottom = np.asarray(sp.lambdify(x, data["bottom"], "numpy")(values), dtype=float) + np.zeros_like(values)
-        ax.fill_between(values, bottom, top, color=blue, alpha=0.68, label="Region A")
-        ax.plot(values, top, color=navy, lw=2.4, label=r"Upper $y_T(x)$")
-        ax.plot(values, bottom, color=green, lw=2.2, label=r"Lower $y_B(x)$")
+        ax.fill_between(values, bottom, top, color=blue, alpha=0.28, label="Complete region A")
+        ax.plot(values, top, color=navy, lw=2.6, label=r"Upper boundary $y_T(x)$")
+        ax.plot(values, bottom, color=green, lw=2.3, label=r"Lower boundary $y_B(x)$")
         s = float(strip_position)
-        top_s, bottom_s = float(data["top"].subs(x, s)), float(data["bottom"].subs(x, s))
-        half = max((upper - lower) * 0.014, 0.018)
-        ax.add_patch(Rectangle((s - half, bottom_s), 2 * half, top_s - bottom_s,
-                               facecolor=orange, edgecolor="#c2410c", alpha=0.92, zorder=5))
-        strip_centroid = (s, (top_s + bottom_s) / 2)
-        ax.text(s, bottom_s - 0.07 * max(1, top_s - bottom_s), r"$dx$", ha="center", color="#c2410c", weight="bold")
-        ax.annotate(r"height $=y_T-y_B$", xy=strip_centroid,
-                    xytext=(s + 0.16 * (upper - lower), strip_centroid[1]),
-                    arrowprops=dict(arrowstyle="->", color=orange), color="#c2410c", weight="bold")
+        top_s = float(data["top"].subs(x, s)); bottom_s = float(data["bottom"].subs(x, s))
+        half = max(span * 0.016, 0.018)
+        ax.add_patch(Rectangle((s-half, bottom_s), 2*half, top_s-bottom_s,
+                               facecolor=orange, edgecolor="#c2410c", lw=1.4,
+                               alpha=0.58, zorder=5, label="Differential strip"))
+        strip_centroid = (s, (top_s+bottom_s)/2)
+        ax.annotate(r"$dx$", xy=(s, bottom_s), xytext=(0, -25), textcoords="offset points",
+                    ha="center", color="#9a3412", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="-[,widthB=1.0", color="#c2410c", alpha=.75))
+        ax.annotate(r"height $=y_T-y_B$", xy=strip_centroid, xytext=(42, 0),
+                    textcoords="offset points", va="center", color="#9a3412", weight="bold",
+                    bbox=bbox, arrowprops=dict(arrowstyle="->", color=orange, alpha=.8))
+        boundary_note = rf"$y_T={sp.latex(data['top'])}$" + r"\n" + rf"$y_B={sp.latex(data['bottom'])}$"
+        ax.text(0.02, 0.98, boundary_note, transform=ax.transAxes, va="top", ha="left",
+                color="#0f172a", fontsize=10, bbox=bbox)
     else:
         values = np.linspace(lower, upper, 500)
         right = np.asarray(sp.lambdify(y, data["right"], "numpy")(values), dtype=float) + np.zeros_like(values)
         left = np.asarray(sp.lambdify(y, data["left"], "numpy")(values), dtype=float) + np.zeros_like(values)
-        ax.fill_betweenx(values, left, right, color=blue, alpha=0.68, label="Region A")
-        ax.plot(right, values, color=navy, lw=2.4, label=r"Right $x_R(y)$")
-        ax.plot(left, values, color=green, lw=2.2, label=r"Left $x_L(y)$")
+        ax.fill_betweenx(values, left, right, color=blue, alpha=0.28, label="Complete region A")
+        ax.plot(right, values, color=navy, lw=2.6, label=r"Right boundary $x_R(y)$")
+        ax.plot(left, values, color=green, lw=2.3, label=r"Left boundary $x_L(y)$")
         s = float(strip_position)
-        right_s, left_s = float(data["right"].subs(y, s)), float(data["left"].subs(y, s))
-        half = max((upper - lower) * 0.014, 0.018)
-        ax.add_patch(Rectangle((left_s, s - half), right_s - left_s, 2 * half,
-                               facecolor=orange, edgecolor="#c2410c", alpha=0.92, zorder=5))
-        strip_centroid = ((right_s + left_s) / 2, s)
-        ax.text(left_s - 0.07 * max(1, right_s - left_s), s, r"$dy$", va="center", color="#c2410c", weight="bold")
-        ax.annotate(r"width $=x_R-x_L$", xy=strip_centroid,
-                    xytext=(strip_centroid[0], s + 0.16 * (upper - lower)), ha="center",
-                    arrowprops=dict(arrowstyle="->", color=orange), color="#c2410c", weight="bold")
+        right_s = float(data["right"].subs(y, s)); left_s = float(data["left"].subs(y, s))
+        half = max(span * 0.016, 0.018)
+        ax.add_patch(Rectangle((left_s, s-half), right_s-left_s, 2*half,
+                               facecolor=orange, edgecolor="#c2410c", lw=1.4,
+                               alpha=0.58, zorder=5, label="Differential strip"))
+        strip_centroid = ((right_s+left_s)/2, s)
+        ax.annotate(r"$dy$", xy=(left_s, s), xytext=(-28, 0), textcoords="offset points",
+                    va="center", color="#9a3412", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="-[,widthB=1.0", color="#c2410c", alpha=.75))
+        ax.annotate(r"width $=x_R-x_L$", xy=strip_centroid, xytext=(0, 34),
+                    textcoords="offset points", ha="center", color="#9a3412", weight="bold",
+                    bbox=bbox, arrowprops=dict(arrowstyle="->", color=orange, alpha=.8))
+        boundary_note = rf"$x_R={sp.latex(data['right'])}$" + r"\n" + rf"$x_L={sp.latex(data['left'])}$"
+        ax.text(0.02, 0.98, boundary_note, transform=ax.transAxes, va="top", ha="left",
+                color="#0f172a", fontsize=10, bbox=bbox)
 
-    ax.scatter(*strip_centroid, s=92, color=purple, zorder=8)
-    ax.annotate(r"strip centroid $(\tilde{x},\tilde{y})$", xy=strip_centroid,
-                xytext=(12, 22), textcoords="offset points",
-                arrowprops=dict(arrowstyle="->", color=purple), color=purple, weight="bold")
-    if show_area_centroid:
+    if stage in ("strip", "centroid", "all"):
+        ax.scatter(*strip_centroid, s=90, color=purple, edgecolor="white", linewidth=1.0, zorder=8)
+        ax.annotate(r"strip centroid" + r"\n" + r"$(\tilde{x},\tilde{y})$", xy=strip_centroid,
+                    xytext=(-62, 35), textcoords="offset points", ha="center",
+                    color=purple, weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="->", color=purple, alpha=.8))
+    if show_area_centroid or stage in ("centroid", "all_centroid"):
         whole = (float(data["x_bar"]), float(data["y_bar"]))
-        ax.scatter(*whole, marker="X", s=175, color=red, edgecolor="white", zorder=9)
-        ax.annotate(r"area centroid $(\bar{x},\bar{y})$", xy=whole,
-                    xytext=(12, -30), textcoords="offset points",
-                    arrowprops=dict(arrowstyle="->", color=red), color=red, weight="bold")
+        ax.scatter(*whole, marker="X", s=180, color=red, edgecolor="white", linewidth=1.2, zorder=9)
+        ax.annotate(r"complete-area centroid" + r"\n" + r"$(\bar{x},\bar{y})$", xy=whole,
+                    xytext=(62, -38), textcoords="offset points", ha="center",
+                    color=red, weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="->", color=red, alpha=.8))
 
-    ax.axhline(0, color="#64748b", lw=1)
-    ax.axvline(0, color="#64748b", lw=1)
-    ax.grid(alpha=0.15)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    ax.axhline(0, color="#64748b", lw=1); ax.axvline(0, color="#64748b", lw=1)
+    ax.grid(alpha=0.12); ax.set_xlabel("x"); ax.set_ylabel("y")
     ax.set_aspect("equal", adjustable="datalim")
-    ax.legend(loc="best", fontsize=9)
-    if title:
-        ax.set_title(title, weight="bold")
-    fig.tight_layout()
+    ax.legend(loc="upper right", fontsize=9, framealpha=.88)
+    if title: ax.set_title(title, weight="bold", pad=12)
+    fig.tight_layout(pad=1.5)
     return fig
-
 
 def render_interactive_diagram(problem, key_prefix):
     data = problem["data"]
@@ -291,6 +304,26 @@ def render_interactive_diagram(problem, key_prefix):
 def render_static_diagram(data, title, show_centroid=True):
     position = float((data["lower"] + data["upper"]) / 2)
     st.pyplot(region_figure(data, position, show_centroid, title), use_container_width=True)
+
+
+def render_solution_process_figures(data):
+    """Use three coded figures to visually build the solution without repeated widgets."""
+    position = float(data["lower"] + 0.58 * (data["upper"] - data["lower"]))
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.markdown("#### Figure A: Boundaries and differential strip")
+        st.pyplot(region_figure(data, position, False,
+                  "1. Identify boundaries and form dA", stage="strip"),
+                  use_container_width=True)
+    with c2:
+        st.markdown("#### Figure B: Strip-centroid coordinates")
+        st.pyplot(region_figure(data, position, False,
+                  "2. Locate the centroid of the moving strip", stage="centroid"),
+                  use_container_width=True)
+    st.markdown("#### Figure C: Complete-area centroid and reference axes")
+    st.pyplot(region_figure(data, position, True,
+              "3. Integrate over the complete region and locate the area centroid", stage="all"),
+              use_container_width=True)
 
 
 def render_learn_tab():
@@ -384,77 +417,63 @@ def render_detailed_solution(problem):
     variable = "x" if vertical else "y"
 
     st.markdown("## Detailed step-by-step solution")
-    st.markdown("### Step 1: Read the geometry and choose the cut")
+    st.markdown('<div class="info-box">The figures below build the method visually: boundaries → differential strip → strip centroid → complete-area centroid.</div>', unsafe_allow_html=True)
+    render_solution_process_figures(data)
+
+    st.markdown("### Step 1: Choose the cut and write the boundaries")
     if vertical:
-        st.write("A vertical strip is direct because the upper and lower boundaries are functions of x.")
+        st.write("Use a vertical strip because the upper and lower boundaries are functions of x.")
         st.latex(rf"y_T(x)={sp.latex(data['top'])},\qquad y_B(x)={sp.latex(data['bottom'])}")
-        st.write("The strip height is upper minus lower. This order keeps dA positive.")
+        st.write("The strip height is upper boundary minus lower boundary, so:")
     else:
-        st.write("A horizontal strip is direct because the right and left boundaries are functions of y.")
+        st.write("Use a horizontal strip because the right and left boundaries are functions of y.")
         st.latex(rf"x_R(y)={sp.latex(data['right'])},\qquad x_L(y)={sp.latex(data['left'])}")
-        st.write("The strip width is right minus left. This order keeps dA positive.")
+        st.write("The strip width is right boundary minus left boundary, so:")
     st.latex(rf"dA=\left({sp.latex(data['dA'])}\right){differential}")
 
-    st.markdown("### Step 2: Locate the centroid of one differential strip")
-    st.write("The strip centroid moves as the strip moves, so tilde notation is used rather than bar notation.")
-    st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
+    st.markdown("### Step 2: Locate the centroid of the differential strip")
+    st.write("The tilde coordinates describe the centroid of one moving strip, not the centroid of the complete area.")
+    st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad\tilde{{y}}={sp.latex(data['y_tilde'])}")
 
     st.markdown("### Step 3: Establish the integration limits")
-    st.write(f"The strip sweeps through the complete region from {variable} = {sp.latex(data['lower'])} to {variable} = {sp.latex(data['upper'])}.")
+    st.write(f"The strip sweeps over the complete region from {variable}={sp.latex(data['lower'])} to {variable}={sp.latex(data['upper'])}.")
     st.latex(rf"{sp.latex(data['lower'])}\le {variable}\le {sp.latex(data['upper'])}")
 
     st.markdown("### Step 4: Calculate the total area")
-    st.latex(
-        rf"A=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}dA"
-        rf"=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}"
-        rf"\left({sp.latex(data['dA'])}\right){differential}"
-    )
+    st.latex(rf"A=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\left({sp.latex(data['dA'])}\right){differential}")
     st.latex(rf"A={sp.latex(data['area'])}\;\mathrm{{units}}^2\approx {fmt(data['area'])}\;\mathrm{{units}}^2")
 
-    st.markdown("### Step 5: Calculate the first moments and centroid")
-    st.write("The first moment about the y-axis uses the strip x-coordinate; the first moment about the x-axis uses the strip y-coordinate.")
-    st.latex(rf"Q_y=\int\tilde{{x}}\,dA={sp.latex(data['q_y'])}")
-    st.latex(rf"\bar{{x}}=\frac{{Q_y}}{{A}}={sp.latex(data['x_bar'])}\approx {fmt(data['x_bar'])}\;\mathrm{{units}}")
-    st.latex(rf"Q_x=\int\tilde{{y}}\,dA={sp.latex(data['q_x'])}")
-    st.latex(rf"\bar{{y}}=\frac{{Q_x}}{{A}}={sp.latex(data['y_bar'])}\approx {fmt(data['y_bar'])}\;\mathrm{{units}}")
+    st.markdown("### Step 5: Calculate the centroid using the full centroid equations")
+    st.write("Substitute the strip-centroid coordinate and dA directly into each centroid equation.")
+    st.latex(rf"\bar{{x}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\tilde{{x}}\,dA}}{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}dA}}")
+    st.latex(rf"\bar{{x}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\left({sp.latex(data['x_tilde'])}\right)\left({sp.latex(data['dA'])}\right){differential}}}{{{sp.latex(data['area'])}}}={sp.latex(data['x_bar'])}\approx {fmt(data['x_bar'])}\;\mathrm{{units}}")
+    st.latex(rf"\bar{{y}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\tilde{{y}}\,dA}}{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}dA}}")
+    st.latex(rf"\bar{{y}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\left({sp.latex(data['y_tilde'])}\right)\left({sp.latex(data['dA'])}\right){differential}}}{{{sp.latex(data['area'])}}}={sp.latex(data['y_bar'])}\approx {fmt(data['y_bar'])}\;\mathrm{{units}}")
 
     st.markdown("### Step 6: Calculate second moments about the shown axes")
     if vertical:
-        st.write("For Iy, every point in the thin strip has approximately the same x-coordinate, so dIy = x²dA. For Ix, integrate through the full strip depth.")
-        st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}x^2[y_T-y_B]dx={sp.latex(data['i_y'])}")
-        st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{y_T^3-y_B^3}}{{3}}dx={sp.latex(data['i_x'])}")
+        st.write("For Iy, the thin strip is located at x. For Ix, integrate through the full strip depth from yB to yT.")
+        st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}x^2[y_T-y_B]dx={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
+        st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{y_T^3-y_B^3}}{{3}}dx={sp.latex(data['i_x'])}\;\mathrm{{units}}^4")
     else:
-        st.write("For Ix, every point in the thin strip has approximately the same y-coordinate, so dIx = y²dA. For Iy, integrate through the full strip width.")
-        st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}y^2[x_R-x_L]dy={sp.latex(data['i_x'])}")
-        st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{x_R^3-x_L^3}}{{3}}dy={sp.latex(data['i_y'])}")
-    st.write("Both second moments must be positive and have units of length to the fourth power.")
+        st.write("For Ix, the thin strip is located at y. For Iy, integrate through the full strip width from xL to xR.")
+        st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}y^2[x_R-x_L]dy={sp.latex(data['i_x'])}\;\mathrm{{units}}^4")
+        st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{x_R^3-x_L^3}}{{3}}dy={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
 
-    st.markdown("### Step 7: Shift to centroidal axes")
-    st.write("The reference axes and centroidal axes are parallel. Rearranging the parallel-axis theorem gives:")
-    st.latex(rf"I_{{\bar{{x}}}}=I_x-A\bar{{y}}^2={sp.latex(data['i_x_bar'])}")
-    st.latex(rf"I_{{\bar{{y}}}}=I_y-A\bar{{x}}^2={sp.latex(data['i_y_bar'])}")
+    st.markdown("### Step 7: Shift to centroidal axes when required")
+    st.latex(rf"I_{{\bar{{x}}}}=I_x-A\bar{{y}}^2={sp.latex(data['i_x_bar'])}\;\mathrm{{units}}^4")
+    st.latex(rf"I_{{\bar{{y}}}}=I_y-A\bar{{x}}^2={sp.latex(data['i_y_bar'])}\;\mathrm{{units}}^4")
 
-    st.markdown("### Final answers and physical checks")
+    st.markdown("### Final checks")
     c1, c2, c3 = st.columns(3)
     c1.metric("Area", f"{fmt(data['area'])} units²")
     c2.metric("x̄", f"{fmt(data['x_bar'])} units")
     c3.metric("ȳ", f"{fmt(data['y_bar'])} units")
-    st.markdown(
-        '<div class="hint-box"><b>Checks:</b> area is positive; the centroid lies inside the region; '
-        'second moments are positive; centroid units are length; second-moment units are length⁴.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="hint-box"><b>Checks:</b> area is positive; the centroid lies inside the region; second moments are positive; centroid units are length; second-moment units are length⁴.</div>', unsafe_allow_html=True)
 
 
 render_header()
 
-st.sidebar.markdown("## Learning mode")
-mode = st.sidebar.radio(
-    "Choose activity",
-    ["Guided practice", "Self-test"],
-    help="Guided practice provides explanations and expected values. Self-test hides the detailed solution until revealed.",
-)
-st.sidebar.markdown("---")
 st.sidebar.markdown("## Problem setup")
 level_names = {
     1: "1 · Rectangle",
@@ -583,7 +602,7 @@ with tabs[3]:
             if result:
                 st.markdown(f'<div class="good">{labels[key][0]}: correct.</div>', unsafe_allow_html=True)
             else:
-                detail = f" Expected approximately {fmt(expected)} {labels[key][1]}." if mode == "Guided practice" else ""
+                detail = f" Expected approximately {fmt(expected)} {labels[key][1]}."
                 st.markdown(
                     f'<div class="bad">{labels[key][0]}: check the strip setup, limits, formula, and arithmetic.{detail}</div>',
                     unsafe_allow_html=True,
@@ -594,13 +613,4 @@ with tabs[3]:
     st.write("• Area must be positive.  \n• The centroid should lie inside the region.  \n• Second moments must be positive.  \n• Centroid units are length; second-moment units are length⁴.")
 
 with tabs[4]:
-    revealed = mode == "Guided practice" or st.session_state.get(f"reveal_{problem['uid']}", False)
-    if not revealed:
-        st.warning("The detailed solution is hidden in Self-test mode.")
-        if st.button("Reveal detailed solution", key=f"reveal_button_{problem['uid']}"):
-            st.session_state[f"reveal_{problem['uid']}"] = True
-            st.rerun()
-    else:
-        # Static diagram here deliberately avoids duplicate Streamlit widget keys.
-        render_static_diagram(data, "Problem geometry used in the solution", True)
-        render_detailed_solution(problem)
+    render_detailed_solution(problem)
