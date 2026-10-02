@@ -207,7 +207,7 @@ def generate_problem(level, seed):
 
 def region_figure(data, strip_position, show_area_centroid=False, title=None, stage="all"):
     """Draw the region from its exact equations with transparent, non-overlapping annotations."""
-    fig, ax = plt.subplots(figsize=(6.6, 4.5))
+    fig, ax = plt.subplots(figsize=(8.0, 5.6))
     blue, navy, green = "#38bdf8", "#0047AB", "#00A651"
     orange, purple, red = "#FF7A00", "#7A00CC", "#E00034"
     lower, upper = map(float, (data["lower"], data["upper"]))
@@ -325,7 +325,7 @@ def render_interactive_diagram(problem, key_prefix):
 
 def render_static_diagram(data, title, show_centroid=True):
     position = float((data["lower"] + data["upper"]) / 2)
-    left_space, figure_col, right_space = st.columns([0.45, 1.6, 0.45])
+    left_space, figure_col, right_space = st.columns([0.15, 2.2, 0.15])
     with figure_col:
         st.pyplot(region_figure(data, position, show_centroid, title), use_container_width=True)
 
@@ -410,7 +410,7 @@ def render_learn_tab():
         st.latex(r"I_y=\int_c^d\frac{x_R^3-x_L^3}{3}\,dy")
 
     st.markdown("### Two valid ways to obtain the strip second moment")
-    st.markdown('<div class="info-box"><b>Recommended teaching sequence:</b> begin with the parallel-axis theorem because it matches the lecture notes and uses the familiar rectangle formula. Then show direct integration as an independent verification. Both methods are mathematically identical.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box"><b>Recommended study sequence:</b> Start with the parallel-axis theorem because it connects directly to the lecture notes and the second moment of a rectangle. After you understand that method, use direct integration as a verification step. Both methods produce exactly the same result.</div>', unsafe_allow_html=True)
     pat_left, pat_right = st.columns(2, gap="large")
     with pat_left:
         st.markdown("#### Vertical strip: parallel-axis theorem")
@@ -430,7 +430,7 @@ def render_learn_tab():
         st.latex(r"dI_y=\frac{1}{12}w^3dy+w\,dy\left(\frac{x_R+x_L}{2}\right)^2")
         st.latex(r"dI_y=\frac{x_R^3-x_L^3}{3}dy")
         st.write("If xL = 0 and xR = w, this becomes dIy = w³dy/3.")
-    st.markdown('<div class="hint-box"><b>Which is easier?</b> For first-year students, the parallel-axis approach is usually easier to connect to prior learning because the strip is a thin rectangle. Direct integration is more fundamental and is valuable as a check. The app now shows both.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hint-box"><b>Which method should you learn first?</b> Most students find the parallel-axis approach easier at first because the differential strip behaves like a thin rectangle. Once the idea is clear, direct integration helps explain where the formula comes from. You should be comfortable with both approaches because they are mathematically equivalent.</div>', unsafe_allow_html=True)
 
     st.markdown("### 3. Area, centroid, and centroidal axes")
     c1, c2 = st.columns(2, gap="large")
@@ -629,7 +629,7 @@ with tabs[0]:
 with tabs[1]:
     st.markdown("## Explore a teaching example")
     st.markdown(
-        '<div class="info-box"><b>How to use this page:</b> move the differential strip, identify its boundaries and centroid, then reveal the centroid of the complete area. The complete derivation is provided in the next tab.</div>',
+        '<div class="info-box"><b>How to study this example:</b> Move the differential strip slowly from one side of the region to the other. Pay attention to how the strip dimensions, strip centroid, and complete-area centroid relate to the equations. Then follow the derivation in the next tab.</div>',
         unsafe_allow_html=True,
     )
     left, right = st.columns([1.0, 1.15], gap="large")
@@ -652,7 +652,7 @@ with tabs[1]:
             st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dy")
             st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
         st.markdown(
-            '<div class="method-card"><b>Observe in the diagram</b><br>'
+            '<div class="method-card"><b>What you should observe</b><br>'
             '• which two boundaries define the strip;<br>'
             '• why the thickness is dx or dy;<br>'
             '• how the strip-centroid coordinates change;<br>'
@@ -665,7 +665,7 @@ with tabs[1]:
 
 with tabs[2]:
     st.markdown(
-        '<div class="info-box"><b>Teaching sequence:</b> geometry → differential area → strip centroid → integration limits → area → centroid → second moments → centroidal axes.</div>',
+        '<div class="info-box"><b>Suggested learning sequence:</b> geometry → differential area → strip centroid → integration limits → area → centroid → second moments → centroidal axes.</div>',
         unsafe_allow_html=True,
     )
     render_detailed_solution(problem)
