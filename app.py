@@ -575,6 +575,164 @@ def render_detailed_solution(problem):
     st.markdown('<div class="hint-box"><b>Checks:</b> area is positive; the centroid lies inside the region; second moments are positive; centroid units are length; second-moment units are length⁴.</div>', unsafe_allow_html=True)
 
 
+
+def render_theory_tab():
+    st.markdown("## Learn the theory")
+    st.markdown('<div class="info-box"><b>Your learning goal:</b> understand how a region is replaced by many thin strips, then use integration to calculate area, centroid, and second moment of area.</div>', unsafe_allow_html=True)
+    st.markdown("### 1. Essential integration")
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.markdown("#### Reverse power rule")
+        st.latex(r"\int x^n\,dx=\frac{x^{n+1}}{n+1}+C,\qquad n\neq -1")
+        st.write("Increase the power by one and divide by the new power.")
+    with c2:
+        st.markdown("#### Definite integral")
+        st.latex(r"\int_a^b f(x)\,dx=F(b)-F(a)")
+        st.write("Substitute the upper limit first, then subtract the value at the lower limit.")
+    st.markdown("### 2. Area and centroid")
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.latex(r"A=\int dA")
+        st.latex(r"\bar{x}=\frac{\int \tilde{x}\,dA}{\int dA}")
+        st.latex(r"\bar{y}=\frac{\int \tilde{y}\,dA}{\int dA}")
+    with c2:
+        st.write("Use tildes for the centroid of one moving strip.")
+        st.write("Use bars for the centroid of the complete area.")
+        st.write("The integration limits must match the variable in the differential, dx or dy.")
+    st.markdown("### 3. Second moment of area")
+    st.latex(r"I_x=\int_A y^2\,dA,\qquad I_y=\int_A x^2\,dA")
+    st.write("The distance from the reference axis is squared. Therefore, area farther from an axis contributes much more strongly.")
+    st.markdown("### 4. Centroidal axes")
+    st.latex(r"I_{\bar{x}}=I_x-A\bar{y}^{\,2},\qquad I_{\bar{y}}=I_y-A\bar{x}^{\,2}")
+    st.markdown('<div class="hint-box"><b>Recommended order:</b> identify the geometry, define dA, locate the strip centroid, set the limits, calculate area and centroid, then calculate second moments.</div>', unsafe_allow_html=True)
+
+
+def render_vertical_walkthrough():
+    st.markdown("## Vertical strip walkthrough")
+    st.markdown('<div class="info-box"><b>Use a vertical strip</b> when the region is most naturally described by an upper boundary and a lower boundary, both written as functions of x.</div>', unsafe_allow_html=True)
+    data = solve_vertical(4 - x**2 / 4, 0, 0, 4)
+    render_static_diagram(data, "Vertical strip: upper minus lower", False)
+    st.markdown("### Step 1: Identify the strip")
+    st.latex(r"\text{thickness}=dx,\qquad \text{height}=y_T(x)-y_B(x)")
+    st.latex(r"dA=[y_T(x)-y_B(x)]dx")
+    st.markdown("### Step 2: Locate the strip centroid")
+    st.latex(r"\tilde{x}=x,\qquad \tilde{y}=\frac{y_T+y_B}{2}")
+    st.markdown("### Step 3: Set the x-limits")
+    st.write("Read the leftmost and rightmost x-coordinates of the complete region.")
+    st.latex(r"x=a\quad\text{to}\quad x=b")
+    st.markdown("### Step 4: Build the required integrals")
+    st.latex(r"A=\int_a^b [y_T-y_B]dx")
+    st.latex(r"\bar{x}=\frac{\int_a^b x[y_T-y_B]dx}{\int_a^b[y_T-y_B]dx}")
+    st.latex(r"\bar{y}=\frac{\int_a^b \left(\frac{y_T+y_B}{2}\right)[y_T-y_B]dx}{\int_a^b[y_T-y_B]dx}")
+    st.latex(r"I_y=\int_a^b x^2[y_T-y_B]dx")
+    st.latex(r"I_x=\int_a^b\frac{y_T^3-y_B^3}{3}dx")
+    st.warning("For Ix, do not use only tilde-y squared times dA. A vertical strip has a finite height and therefore has its own local second moment.")
+
+
+def render_horizontal_walkthrough():
+    st.markdown("## Horizontal strip walkthrough")
+    st.markdown('<div class="info-box"><b>Use a horizontal strip</b> when the region is most naturally described by a right boundary and a left boundary, both written as functions of y.</div>', unsafe_allow_html=True)
+    data = solve_horizontal(4 - y**2 / 4, 0, 0, 4)
+    render_static_diagram(data, "Horizontal strip: right minus left", False)
+    st.markdown("### Step 1: Identify the strip")
+    st.latex(r"\text{thickness}=dy,\qquad \text{width}=x_R(y)-x_L(y)")
+    st.latex(r"dA=[x_R(y)-x_L(y)]dy")
+    st.markdown("### Step 2: Locate the strip centroid")
+    st.latex(r"\tilde{x}=\frac{x_R+x_L}{2},\qquad \tilde{y}=y")
+    st.markdown("### Step 3: Set the y-limits")
+    st.write("Read the lowest and highest y-coordinates of the complete region.")
+    st.latex(r"y=c\quad\text{to}\quad y=d")
+    st.markdown("### Step 4: Build the required integrals")
+    st.latex(r"A=\int_c^d [x_R-x_L]dy")
+    st.latex(r"\bar{x}=\frac{\int_c^d \left(\frac{x_R+x_L}{2}\right)[x_R-x_L]dy}{\int_c^d[x_R-x_L]dy}")
+    st.latex(r"\bar{y}=\frac{\int_c^d y[x_R-x_L]dy}{\int_c^d[x_R-x_L]dy}")
+    st.latex(r"I_x=\int_c^d y^2[x_R-x_L]dy")
+    st.latex(r"I_y=\int_c^d\frac{x_R^3-x_L^3}{3}dy")
+    st.warning("For Iy, do not use only tilde-x squared times dA. A horizontal strip has a finite width and therefore has its own local second moment.")
+
+
+def render_formula_tab():
+    st.markdown("## Why the formulas work")
+    st.markdown('<div class="info-box"><b>Two valid routes:</b> the parallel-axis theorem matches your lecture notes and is usually the easier starting point. Direct integration explains the same result from the definition. Both routes are equivalent.</div>', unsafe_allow_html=True)
+    st.markdown("### Vertical strip: obtaining dIx")
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.markdown("#### Parallel-axis theorem")
+        st.latex(r"h=y_T-y_B,\qquad dA=h\,dx,\qquad \tilde{y}=\frac{y_T+y_B}{2}")
+        st.latex(r"dI_{x,c}=\frac{1}{12}(dx)h^3")
+        st.latex(r"dI_x=dI_{x,c}+dA\tilde{y}^{\,2}")
+        st.latex(r"dI_x=\frac{1}{12}h^3dx+h\,dx\left(\frac{y_T+y_B}{2}\right)^2")
+        st.latex(r"dI_x=\frac{y_T^3-y_B^3}{3}dx")
+    with c2:
+        st.markdown("#### Direct integration")
+        st.latex(r"dA=dy\,dx")
+        st.latex(r"dI_x=\int_{y_B}^{y_T}y^2\,dy\,dx")
+        st.latex(r"dI_x=\left[\frac{y^3}{3}\right]_{y_B}^{y_T}dx")
+        st.latex(r"dI_x=\frac{y_T^3-y_B^3}{3}dx")
+    st.markdown("### Horizontal strip: obtaining dIy")
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
+        st.markdown("#### Parallel-axis theorem")
+        st.latex(r"w=x_R-x_L,\qquad dA=w\,dy,\qquad \tilde{x}=\frac{x_R+x_L}{2}")
+        st.latex(r"dI_{y,c}=\frac{1}{12}(dy)w^3")
+        st.latex(r"dI_y=dI_{y,c}+dA\tilde{x}^{\,2}")
+        st.latex(r"dI_y=\frac{x_R^3-x_L^3}{3}dy")
+    with c2:
+        st.markdown("#### Direct integration")
+        st.latex(r"dA=dx\,dy")
+        st.latex(r"dI_y=\int_{x_L}^{x_R}x^2\,dx\,dy")
+        st.latex(r"dI_y=\left[\frac{x^3}{3}\right]_{x_L}^{x_R}dy")
+        st.latex(r"dI_y=\frac{x_R^3-x_L^3}{3}dy")
+    st.success("You may use either route. Start with the parallel-axis theorem if that is the method used in your lecture notes, and use direct integration to check your understanding.")
+
+
+def render_complete_examples():
+    st.markdown("## Complete worked examples")
+    st.markdown('<div class="info-box">The same triangular region is solved with both cutting directions. Compare the setup carefully and confirm that both methods give the same final values.</div>', unsafe_allow_html=True)
+    st.markdown("### Example A: Vertical strip")
+    data_v = solve_vertical(4 - x, 0, 0, 4)
+    render_static_diagram(data_v, "Vertical strip for y = 4 - x", True)
+    st.latex(r"dA=(4-x)dx,\qquad \tilde{x}=x,\qquad \tilde{y}=\frac{4-x}{2}")
+    st.latex(r"A=\int_0^4(4-x)dx=8")
+    st.latex(r"\bar{x}=\frac{\int_0^4x(4-x)dx}{8}=\frac43")
+    st.latex(r"\bar{y}=\frac{\int_0^4\left(\frac{4-x}{2}\right)(4-x)dx}{8}=\frac43")
+    st.latex(r"I_x=\int_0^4\frac{(4-x)^3}{3}dx=\frac{64}{3},\qquad I_y=\int_0^4x^2(4-x)dx=\frac{64}{3}")
+    st.markdown("---")
+    st.markdown("### Example B: Horizontal strip")
+    data_h = solve_horizontal(4 - y, 0, 0, 4)
+    render_static_diagram(data_h, "Horizontal strip for x = 4 - y", True)
+    st.latex(r"dA=(4-y)dy,\qquad \tilde{x}=\frac{4-y}{2},\qquad \tilde{y}=y")
+    st.latex(r"A=\int_0^4(4-y)dy=8")
+    st.latex(r"\bar{x}=\frac{\int_0^4\left(\frac{4-y}{2}\right)(4-y)dy}{8}=\frac43")
+    st.latex(r"\bar{y}=\frac{\int_0^4y(4-y)dy}{8}=\frac43")
+    st.latex(r"I_x=\int_0^4y^2(4-y)dy=\frac{64}{3},\qquad I_y=\int_0^4\frac{(4-y)^3}{3}dy=\frac{64}{3}")
+    st.success("Both directions give A = 8, x-bar = 4/3, y-bar = 4/3, Ix = 64/3, and Iy = 64/3.")
+
+
+def render_interactive_tab(problem):
+    data = problem["data"]
+    st.markdown("## Interactive exploration")
+    st.markdown('<div class="info-box"><b>Try this:</b> move the strip across the region. Watch how the strip dimensions and strip-centroid position change. Then reveal the complete-area centroid.</div>', unsafe_allow_html=True)
+    left, right = st.columns([0.9, 1.25], gap="large")
+    with left:
+        st.caption(f"Level {level} | {problem['difficulty']}")
+        st.markdown(f"### {problem['title']}")
+        st.write(problem["purpose"])
+        if data["cut"] == "vertical":
+            st.latex(rf"y_T(x)={sp.latex(data['top'])},\qquad y_B(x)={sp.latex(data['bottom'])}")
+            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dx")
+            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
+        else:
+            st.latex(rf"x_R(y)={sp.latex(data['right'])},\qquad x_L(y)={sp.latex(data['left'])}")
+            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dy")
+            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
+        st.markdown("#### Final calculated properties")
+        st.latex(rf"A={sp.latex(data['area'])}")
+        st.latex(rf"\bar{{x}}={sp.latex(data['x_bar'])},\qquad \bar{{y}}={sp.latex(data['y_bar'])}")
+        st.latex(rf"I_x={sp.latex(data['i_x'])},\qquad I_y={sp.latex(data['i_y'])}")
+    with right:
+        render_interactive_diagram(problem, key_prefix=f"interactive_{problem['uid']}")
+
 render_header()
 
 st.sidebar.markdown("## Teaching example")
@@ -615,54 +773,23 @@ labels = {
 }
 
 tabs = st.tabs([
-    "0. Learn the method",
-    "1. Explore a teaching example",
-    "2. Step-by-step explanation",
+    "1. Learn the theory",
+    "2. Vertical strip walkthrough",
+    "3. Horizontal strip walkthrough",
+    "4. Why the formulas work",
+    "5. Complete worked examples",
+    "6. Interactive exploration",
 ])
 
 with tabs[0]:
-    render_learn_tab()
-
+    render_theory_tab()
 with tabs[1]:
-    st.markdown("## Explore a teaching example")
-    st.markdown(
-        '<div class="info-box"><b>How to study this example:</b> Move the differential strip slowly from one side of the region to the other. Pay attention to how the strip dimensions, strip centroid, and complete-area centroid relate to the equations. Then follow the derivation in the next tab.</div>',
-        unsafe_allow_html=True,
-    )
-    left, right = st.columns([1.0, 1.15], gap="large")
-    with left:
-        st.caption(f"Level {level} | {problem['difficulty']}")
-        st.markdown(f"### {problem['title']}")
-        st.write(problem["purpose"])
-        if data["cut"] == "vertical":
-            st.markdown("#### Geometry")
-            st.latex(rf"y_T(x)={sp.latex(data['top'])},\qquad y_B(x)={sp.latex(data['bottom'])}")
-            st.latex(rf"{sp.latex(data['lower'])}\le x\le {sp.latex(data['upper'])}")
-            st.markdown("#### Strip definition")
-            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dx")
-            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
-        else:
-            st.markdown("#### Geometry")
-            st.latex(rf"x_R(y)={sp.latex(data['right'])},\qquad x_L(y)={sp.latex(data['left'])}")
-            st.latex(rf"{sp.latex(data['lower'])}\le y\le {sp.latex(data['upper'])}")
-            st.markdown("#### Strip definition")
-            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dy")
-            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
-        st.markdown(
-            '<div class="method-card"><b>What you should observe</b><br>'
-            '• which two boundaries define the strip;<br>'
-            '• why the thickness is dx or dy;<br>'
-            '• how the strip-centroid coordinates change;<br>'
-            '• where the complete-area centroid is located.</div>',
-            unsafe_allow_html=True,
-        )
-    with right:
-        st.markdown("### Interactive coded diagram")
-        render_interactive_diagram(problem, key_prefix=f"example_{problem['uid']}")
-
+    render_vertical_walkthrough()
 with tabs[2]:
-    st.markdown(
-        '<div class="info-box"><b>Suggested learning sequence:</b> geometry → differential area → strip centroid → integration limits → area → centroid → second moments → centroidal axes.</div>',
-        unsafe_allow_html=True,
-    )
-    render_detailed_solution(problem)
+    render_horizontal_walkthrough()
+with tabs[3]:
+    render_formula_tab()
+with tabs[4]:
+    render_complete_examples()
+with tabs[5]:
+    render_interactive_tab(problem)
