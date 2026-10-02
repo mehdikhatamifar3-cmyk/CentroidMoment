@@ -410,7 +410,7 @@ def render_learn_tab():
     pat_left, pat_right = st.columns(2, gap="large")
     with pat_left:
         st.markdown("#### Vertical strip: parallel-axis theorem")
-        st.write("Let the strip height be h = yT - yB, its thickness be dx, and its centroid be at ỹ = (yT + yB)/2.")
+        st.write("Let the strip height be h = yT − yB and its thickness be dx. The local half-height is h/2, while the global strip-centroid coordinate from the x-axis is ỹ = yB + h/2 = (yT + yB)/2.")
         st.latex(r"dA=h\,dx")
         st.latex(r"dI_{x,c}=\frac{1}{12}(dx)h^3")
         st.latex(r"dI_x=dI_{x,c}+dA\,\tilde{y}^{\,2}")
@@ -419,7 +419,7 @@ def render_learn_tab():
         st.write("If yB = 0 and yT = h, this becomes dIx = h³dx/3, exactly as in the lecture notes.")
     with pat_right:
         st.markdown("#### Horizontal strip: parallel-axis theorem")
-        st.write("Let the strip width be w = xR - xL, its thickness be dy, and its centroid be at x̃ = (xR + xL)/2.")
+        st.write("Let the strip width be w = xR − xL and its thickness be dy. The local half-width is w/2, while the global strip-centroid coordinate from the y-axis is x̃ = xL + w/2 = (xR + xL)/2.")
         st.latex(r"dA=w\,dy")
         st.latex(r"dI_{y,c}=\frac{1}{12}(dy)w^3")
         st.latex(r"dI_y=dI_{y,c}+dA\,\tilde{x}^{\,2}")
@@ -438,7 +438,7 @@ def render_learn_tab():
     with c2:
         st.latex(r"I_{\bar{x}}=I_x-A\bar{y}^{\,2}")
         st.latex(r"I_{\bar{y}}=I_y-A\bar{x}^{\,2}")
-        st.write("First calculate about the shown reference axes. Then move to parallel centroidal axes using the parallel-axis theorem.")
+        st.write("First calculate about the shown reference axes. If the required axis is the parallel axis through the complete-area centroid, use the parallel-axis theorem to shift to that centroidal axis.")
 
     st.markdown(
         '<div class="warning-box"><b>Important:</b> for a deep vertical strip, '
@@ -514,7 +514,8 @@ def render_detailed_solution(problem):
     st.latex(rf"dA=\left({sp.latex(data['dA'])}\right){differential}")
 
     st.markdown("### Step 2: Locate the centroid of the differential strip")
-    st.write("The tilde coordinates describe the centroid of one moving strip, not the centroid of the complete area.")
+    st.write("The tilde coordinates describe the global coordinates of one moving strip centroid, measured from the shown reference axes.")
+    render_strip_centroid_note("vertical" if vertical else "horizontal")
     st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad\tilde{{y}}={sp.latex(data['y_tilde'])}")
 
     st.markdown("### Step 3: Establish the integration limits")
@@ -602,9 +603,38 @@ def render_theory_tab():
     st.markdown("### 3. Second moment of area")
     st.latex(r"I_x=\int_A y^2\,dA,\qquad I_y=\int_A x^2\,dA")
     st.write("The distance from the reference axis is squared. Therefore, area farther from an axis contributes much more strongly.")
+    st.markdown("### Coordinate convention used throughout this app")
+    st.write("Boundary symbols such as yT, yB, xR, and xL are coordinates measured from the shown reference axes. Therefore, midpoint coordinates use the average of the two boundary coordinates.")
+    st.latex(r"\tilde{y}=\frac{y_T+y_B}{2},\qquad \tilde{x}=\frac{x_R+x_L}{2}")
+    st.write("The half-height (yT − yB)/2 and half-width (xR − xL)/2 are local distances measured from one boundary, not global coordinates unless that boundary is at zero.")
+
     st.markdown("### 4. Centroidal axes")
     st.latex(r"I_{\bar{x}}=I_x-A\bar{y}^{\,2},\qquad I_{\bar{y}}=I_y-A\bar{x}^{\,2}")
     st.markdown('<div class="hint-box"><b>Recommended order:</b> identify the geometry, define dA, locate the strip centroid, set the limits, calculate area and centroid, then calculate second moments.</div>', unsafe_allow_html=True)
+
+
+def render_strip_centroid_note(cut):
+    """Clarify local half-dimension versus global centroid coordinate."""
+    if cut == "vertical":
+        st.markdown(
+            '<div class="warning-box"><b>Do not confuse two different distances.</b><br>'
+            'The distance from the lower boundary to the strip centroid is '
+            '<b>(yT − yB)/2</b>. However, the global y-coordinate measured from the x-axis is '
+            '<b>yB + (yT − yB)/2 = (yT + yB)/2</b>.</div>',
+            unsafe_allow_html=True,
+        )
+        st.latex(r"\underbrace{\frac{y_T-y_B}{2}}_{\text{local distance from }y_B}\qquad"
+                 r"\underbrace{\tilde{y}=y_B+\frac{y_T-y_B}{2}=\frac{y_T+y_B}{2}}_{\text{global coordinate from the x-axis}}")
+    else:
+        st.markdown(
+            '<div class="warning-box"><b>Do not confuse two different distances.</b><br>'
+            'The distance from the left boundary to the strip centroid is '
+            '<b>(xR − xL)/2</b>. However, the global x-coordinate measured from the y-axis is '
+            '<b>xL + (xR − xL)/2 = (xR + xL)/2</b>.</div>',
+            unsafe_allow_html=True,
+        )
+        st.latex(r"\underbrace{\frac{x_R-x_L}{2}}_{\text{local distance from }x_L}\qquad"
+                 r"\underbrace{\tilde{x}=x_L+\frac{x_R-x_L}{2}=\frac{x_R+x_L}{2}}_{\text{global coordinate from the y-axis}}")
 
 
 def render_vertical_walkthrough():
@@ -616,6 +646,7 @@ def render_vertical_walkthrough():
     st.latex(r"\text{thickness}=dx,\qquad \text{height}=y_T(x)-y_B(x)")
     st.latex(r"dA=[y_T(x)-y_B(x)]dx")
     st.markdown("### Step 2: Locate the strip centroid")
+    render_strip_centroid_note("vertical")
     st.latex(r"\tilde{x}=x,\qquad \tilde{y}=\frac{y_T+y_B}{2}")
     st.markdown("### Step 3: Set the x-limits")
     st.write("Read the leftmost and rightmost x-coordinates of the complete region.")
@@ -638,6 +669,7 @@ def render_horizontal_walkthrough():
     st.latex(r"\text{thickness}=dy,\qquad \text{width}=x_R(y)-x_L(y)")
     st.latex(r"dA=[x_R(y)-x_L(y)]dy")
     st.markdown("### Step 2: Locate the strip centroid")
+    render_strip_centroid_note("horizontal")
     st.latex(r"\tilde{x}=\frac{x_R+x_L}{2},\qquad \tilde{y}=y")
     st.markdown("### Step 3: Set the y-limits")
     st.write("Read the lowest and highest y-coordinates of the complete region.")
@@ -655,6 +687,7 @@ def render_formula_tab():
     st.markdown("## Why the formulas work")
     st.markdown('<div class="info-box"><b>Two valid routes:</b> the parallel-axis theorem matches your lecture notes and is usually the easier starting point. Direct integration explains the same result from the definition. Both routes are equivalent.</div>', unsafe_allow_html=True)
     st.markdown("### Vertical strip: obtaining dIx")
+    render_strip_centroid_note("vertical")
     c1, c2 = st.columns(2, gap="large")
     with c1:
         st.markdown("#### Parallel-axis theorem")
@@ -670,6 +703,7 @@ def render_formula_tab():
         st.latex(r"dI_x=\left[\frac{y^3}{3}\right]_{y_B}^{y_T}dx")
         st.latex(r"dI_x=\frac{y_T^3-y_B^3}{3}dx")
     st.markdown("### Horizontal strip: obtaining dIy")
+    render_strip_centroid_note("horizontal")
     c1, c2 = st.columns(2, gap="large")
     with c1:
         st.markdown("#### Parallel-axis theorem")
