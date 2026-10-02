@@ -208,8 +208,8 @@ def generate_problem(level, seed):
 def region_figure(data, strip_position, show_area_centroid=False, title=None, stage="all"):
     """Draw the region from its exact equations with transparent, non-overlapping annotations."""
     fig, ax = plt.subplots(figsize=(8.2, 5.8))
-    blue, navy, green = "#60a5fa", "#1d4ed8", "#047857"
-    orange, purple, red = "#f97316", "#7c3aed", "#dc2626"
+    blue, navy, green = "#38bdf8", "#0047AB", "#00A651"
+    orange, purple, red = "#FF7A00", "#7A00CC", "#E00034"
     lower, upper = map(float, (data["lower"], data["upper"]))
     span = max(upper - lower, 1.0)
     bbox = dict(boxstyle="round,pad=0.25", fc="white", ec="none", alpha=0.82)
@@ -218,15 +218,15 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
         values = np.linspace(lower, upper, 500)
         top = np.asarray(sp.lambdify(x, data["top"], "numpy")(values), dtype=float) + np.zeros_like(values)
         bottom = np.asarray(sp.lambdify(x, data["bottom"], "numpy")(values), dtype=float) + np.zeros_like(values)
-        ax.fill_between(values, bottom, top, color=blue, alpha=0.28, label="Complete region A")
-        ax.plot(values, top, color=navy, lw=2.6, label=r"Upper boundary $y_T(x)$")
-        ax.plot(values, bottom, color=green, lw=2.3, label=r"Lower boundary $y_B(x)$")
+        ax.fill_between(values, bottom, top, color=blue, alpha=0.38, label="Complete region A")
+        ax.plot(values, top, color=navy, lw=3.2, label=r"Upper boundary $y_T(x)$")
+        ax.plot(values, bottom, color=green, lw=3.0, label=r"Lower boundary $y_B(x)$")
         s = float(strip_position)
         top_s = float(data["top"].subs(x, s)); bottom_s = float(data["bottom"].subs(x, s))
         half = max(span * 0.016, 0.018)
         ax.add_patch(Rectangle((s-half, bottom_s), 2*half, top_s-bottom_s,
-                               facecolor=orange, edgecolor="#c2410c", lw=1.4,
-                               alpha=0.58, zorder=5, label="Differential strip"))
+                               facecolor=orange, edgecolor="#9A3412", lw=2.0,
+                               alpha=0.68, zorder=5, label="Differential strip"))
         strip_centroid = (s, (top_s+bottom_s)/2)
         ax.annotate(r"$dx$", xy=(s, bottom_s), xytext=(0, -25), textcoords="offset points",
                     ha="center", color="#9a3412", weight="bold", bbox=bbox,
@@ -241,15 +241,15 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
         values = np.linspace(lower, upper, 500)
         right = np.asarray(sp.lambdify(y, data["right"], "numpy")(values), dtype=float) + np.zeros_like(values)
         left = np.asarray(sp.lambdify(y, data["left"], "numpy")(values), dtype=float) + np.zeros_like(values)
-        ax.fill_betweenx(values, left, right, color=blue, alpha=0.28, label="Complete region A")
-        ax.plot(right, values, color=navy, lw=2.6, label=r"Right boundary $x_R(y)$")
-        ax.plot(left, values, color=green, lw=2.3, label=r"Left boundary $x_L(y)$")
+        ax.fill_betweenx(values, left, right, color=blue, alpha=0.38, label="Complete region A")
+        ax.plot(right, values, color=navy, lw=3.2, label=r"Right boundary $x_R(y)$")
+        ax.plot(left, values, color=green, lw=3.0, label=r"Left boundary $x_L(y)$")
         s = float(strip_position)
         right_s = float(data["right"].subs(y, s)); left_s = float(data["left"].subs(y, s))
         half = max(span * 0.016, 0.018)
         ax.add_patch(Rectangle((left_s, s-half), right_s-left_s, 2*half,
-                               facecolor=orange, edgecolor="#c2410c", lw=1.4,
-                               alpha=0.58, zorder=5, label="Differential strip"))
+                               facecolor=orange, edgecolor="#9A3412", lw=2.0,
+                               alpha=0.68, zorder=5, label="Differential strip"))
         strip_centroid = ((right_s+left_s)/2, s)
         ax.annotate(r"$dy$", xy=(left_s, s), xytext=(-28, 0), textcoords="offset points",
                     va="center", color="#9a3412", weight="bold", bbox=bbox,
@@ -275,13 +275,35 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
                     color=red, weight="bold", bbox=bbox,
                     arrowprops=dict(arrowstyle="->", color=red, alpha=.8))
 
-    ax.axhline(0, color="#64748b", lw=1); ax.axvline(0, color="#64748b", lw=1)
+    ax.axhline(0, color="#111827", lw=1.4); ax.axvline(0, color="#111827", lw=1.4)
     ax.grid(alpha=0.12); ax.set_xlabel("x"); ax.set_ylabel("y")
     ax.set_aspect("equal", adjustable="datalim")
     ax.legend(loc="upper right", fontsize=9, framealpha=.88)
     if title: ax.set_title(title, weight="bold", pad=12)
     fig.tight_layout(pad=1.5)
     return fig
+
+def render_colour_key():
+    items = [
+        ("#38bdf8", "Complete region"),
+        ("#0047AB", "Upper / right boundary"),
+        ("#00A651", "Lower / left boundary"),
+        ("#FF7A00", "Differential strip"),
+        ("#7A00CC", "Strip centroid"),
+        ("#E00034", "Complete-area centroid"),
+        ("#111827", "Reference x- and y-axes"),
+    ]
+    html = "<div style='display:grid;gap:7px'>"
+    for colour, text in items:
+        html += (
+            "<div style='display:flex;align-items:center;gap:9px'>"
+            f"<span style='display:inline-block;width:18px;height:18px;border-radius:4px;"
+            f"background:{colour};border:1px solid #334155'></span>"
+            f"<span>{text}</span></div>"
+        )
+    html += "</div>"
+    st.markdown(html, unsafe_allow_html=True)
+
 
 def render_interactive_diagram(problem, key_prefix):
     data = problem["data"]
@@ -298,7 +320,7 @@ def render_interactive_diagram(problem, key_prefix):
         key=f"{key_prefix}_area_centroid",
     )
     st.pyplot(region_figure(data, position, show), use_container_width=True)
-    st.caption("Light blue: complete region | Dark blue: upper/right boundary | Green: lower/left boundary | Orange: differential strip | Purple: strip centroid | Red X: complete-area centroid | Grey: reference axes")
+    st.caption("Cyan: complete region | Royal blue: upper/right boundary | Bright green: lower/left boundary | Orange: differential strip | Purple: strip centroid | Crimson X: complete-area centroid | Black: reference axes")
 
 
 def render_static_diagram(data, title, show_centroid=True):
@@ -382,6 +404,30 @@ def render_learn_tab():
         st.latex(r"dI_y=\left[\frac{x^3}{3}\right]_{x_L}^{x_R}dy=\frac{x_R^3-x_L^3}{3}dy")
         st.latex(r"I_y=\int_c^d\frac{x_R^3-x_L^3}{3}\,dy")
 
+    st.markdown("### Two valid ways to obtain the strip second moment")
+    st.markdown('<div class="info-box"><b>Recommended teaching sequence:</b> begin with the parallel-axis theorem because it matches the lecture notes and uses the familiar rectangle formula. Then show direct integration as an independent verification. Both methods are mathematically identical.</div>', unsafe_allow_html=True)
+    pat_left, pat_right = st.columns(2, gap="large")
+    with pat_left:
+        st.markdown("#### Vertical strip: parallel-axis theorem")
+        st.write("Let the strip height be h = yT - yB, its thickness be dx, and its centroid be at ỹ = (yT + yB)/2.")
+        st.latex(r"dA=h\,dx")
+        st.latex(r"dI_{x,c}=\frac{1}{12}(dx)h^3")
+        st.latex(r"dI_x=dI_{x,c}+dA\,\tilde{y}^{\,2}")
+        st.latex(r"dI_x=\frac{1}{12}h^3dx+h\,dx\left(\frac{y_T+y_B}{2}\right)^2")
+        st.latex(r"dI_x=\frac{y_T^3-y_B^3}{3}dx")
+        st.write("If yB = 0 and yT = h, this becomes dIx = h³dx/3, exactly as in the lecture notes.")
+    with pat_right:
+        st.markdown("#### Horizontal strip: parallel-axis theorem")
+        st.write("Let the strip width be w = xR - xL, its thickness be dy, and its centroid be at x̃ = (xR + xL)/2.")
+        st.latex(r"dA=w\,dy")
+        st.latex(r"dI_{y,c}=\frac{1}{12}(dy)w^3")
+        st.latex(r"dI_y=dI_{y,c}+dA\,\tilde{x}^{\,2}")
+        st.latex(r"dI_y=\frac{1}{12}w^3dy+w\,dy\left(\frac{x_R+x_L}{2}\right)^2")
+        st.latex(r"dI_y=\frac{x_R^3-x_L^3}{3}dy")
+        st.write("If xL = 0 and xR = w, this becomes dIy = w³dy/3.")
+    st.markdown('<div class="hint-box"><b>Which is easier?</b> For first-year students, the parallel-axis approach is usually easier to connect to prior learning because the strip is a thin rectangle. Direct integration is more fundamental and is valuable as a check. The app now shows both.</div>', unsafe_allow_html=True)
+
+    st.markdown("### 3. Area, centroid, and centroidal axes")
     st.markdown("### 3. Area, centroid, and centroidal axes")
     c1, c2 = st.columns(2, gap="large")
     with c1:
@@ -403,37 +449,48 @@ def render_learn_tab():
     )
 
     st.markdown("### 4. Fully worked teaching examples")
-    st.write("The same triangular region is solved twice below. The vertical and horizontal strip methods must give identical final area properties.")
+    st.markdown('<div class="info-box">The same triangular region is solved with a vertical strip and a horizontal strip. Each example is arranged as: geometry, strip definition, centroid equations, then second moments.</div>', unsafe_allow_html=True)
 
     st.markdown("#### Example A: Vertical-strip solution")
     example_v = solve_vertical(4 - x, 0, 0, 4)
-    left, right = st.columns(2, gap="large")
-    with left:
-        render_static_diagram(example_v, "Vertical strip for y = 4 - x", True)
-    with right:
-        st.write("Region: below y = 4 - x, above y = 0, from x = 0 to x = 4.")
-        st.latex(r"dA=(4-x)dx,\\qquad \\tilde{x}=x,\\qquad \\tilde{y}=\\frac{4-x}{2}")
-        st.latex(r"A=\\int_0^4(4-x)dx=8")
-        st.latex(r"\\bar{x}=\\frac{\\int_0^4x(4-x)dx}{\\int_0^4(4-x)dx}=\\frac43")
-        st.latex(r"\\bar{y}=\\frac{\\int_0^4\\frac{4-x}{2}(4-x)dx}{\\int_0^4(4-x)dx}=\\frac43")
-        st.latex(r"I_y=\\int_0^4x^2(4-x)dx=\\frac{64}{3}")
-        st.latex(r"I_x=\\int_0^4\\frac{(4-x)^3}{3}dx=\\frac{64}{3}")
+    render_static_diagram(example_v, "Vertical strip for y = 4 - x", True)
+    st.markdown("##### A1. Geometry and differential area")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.latex(r"y_T=4-x,\qquad y_B=0,\qquad 0\le x\le4")
+        st.latex(r"dA=(y_T-y_B)dx=(4-x)dx")
+    with c2:
+        st.latex(r"\tilde{x}=x")
+        st.latex(r"\tilde{y}=\frac{y_T+y_B}{2}=\frac{4-x}{2}")
+    st.markdown("##### A2. Area and centroid")
+    st.latex(r"A=\int_0^4(4-x)dx=8")
+    st.latex(r"\bar{x}=\frac{\int_0^4x(4-x)dx}{\int_0^4(4-x)dx}=\frac{4}{3}")
+    st.latex(r"\bar{y}=\frac{\int_0^4\left(\frac{4-x}{2}\right)(4-x)dx}{\int_0^4(4-x)dx}=\frac{4}{3}")
+    st.markdown("##### A3. Second moments")
+    st.latex(r"I_y=\int_0^4x^2(4-x)dx=\frac{64}{3}")
+    st.latex(r"I_x=\int_0^4\frac{(4-x)^3}{3}dx=\frac{64}{3}")
 
+    st.markdown("---")
     st.markdown("#### Example B: Horizontal-strip solution of the same region")
-    # y = 4 - x rearranges to x = 4 - y. Thus x_R=4-y and x_L=0, 0<=y<=4.
     example_h = solve_horizontal(4 - y, 0, 0, 4)
-    left, right = st.columns(2, gap="large")
-    with left:
-        render_static_diagram(example_h, "Horizontal strip for x = 4 - y", True)
-    with right:
-        st.write("Rearrange y = 4 - x as x = 4 - y. The right boundary is x_R = 4 - y and the left boundary is x_L = 0.")
-        st.latex(r"dA=(4-y)dy,\\qquad \\tilde{x}=\\frac{4-y}{2},\\qquad \\tilde{y}=y")
-        st.latex(r"A=\\int_0^4(4-y)dy=8")
-        st.latex(r"\\bar{x}=\\frac{\\int_0^4\\frac{4-y}{2}(4-y)dy}{\\int_0^4(4-y)dy}=\\frac43")
-        st.latex(r"\\bar{y}=\\frac{\\int_0^4y(4-y)dy}{\\int_0^4(4-y)dy}=\\frac43")
-        st.latex(r"I_x=\\int_0^4y^2(4-y)dy=\\frac{64}{3}")
-        st.latex(r"I_y=\\int_0^4\\frac{(4-y)^3}{3}dy=\\frac{64}{3}")
-        st.success("Independent check passed: both cutting directions give A = 8, x̄ = 4/3, ȳ = 4/3, Ix = 64/3, and Iy = 64/3.")
+    render_static_diagram(example_h, "Horizontal strip for x = 4 - y", True)
+    st.markdown("##### B1. Geometry and differential area")
+    st.write("Rearrange y = 4 - x as x = 4 - y.")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.latex(r"x_R=4-y,\qquad x_L=0,\qquad 0\le y\le4")
+        st.latex(r"dA=(x_R-x_L)dy=(4-y)dy")
+    with c2:
+        st.latex(r"\tilde{x}=\frac{x_R+x_L}{2}=\frac{4-y}{2}")
+        st.latex(r"\tilde{y}=y")
+    st.markdown("##### B2. Area and centroid")
+    st.latex(r"A=\int_0^4(4-y)dy=8")
+    st.latex(r"\bar{x}=\frac{\int_0^4\left(\frac{4-y}{2}\right)(4-y)dy}{\int_0^4(4-y)dy}=\frac{4}{3}")
+    st.latex(r"\bar{y}=\frac{\int_0^4y(4-y)dy}{\int_0^4(4-y)dy}=\frac{4}{3}")
+    st.markdown("##### B3. Second moments")
+    st.latex(r"I_x=\int_0^4y^2(4-y)dy=\frac{64}{3}")
+    st.latex(r"I_y=\int_0^4\frac{(4-y)^3}{3}dy=\frac{64}{3}")
+    st.success("Cross-check passed: both strip directions give A = 8, x̄ = 4/3, ȳ = 4/3, Ix = 64/3, and Iy = 64/3.")
 
 def render_detailed_solution(problem):
     data = problem["data"]
@@ -492,6 +549,19 @@ def render_detailed_solution(problem):
         st.write("For Iy, x changes from xL to xR inside the strip, so perform the inner x-integration first:")
         st.latex(r"dI_y=\int_{x_L}^{x_R}x^2dx\,dy=\frac{x_R^3-x_L^3}{3}dy")
         st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{x_R^3-x_L^3}}{{3}}dy={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
+
+    st.markdown("#### Parallel-axis theorem alternative for the differential strip")
+    if vertical:
+        st.write("This is the lecture-note approach. Treat the differential strip as a thin rectangle of height h = yT - yB and width dx.")
+        st.latex(r"dI_{x,c}=\frac{1}{12}(dx)h^3,\qquad dA=h\,dx,\qquad \tilde{y}=\frac{y_T+y_B}{2}")
+        st.latex(r"dI_x=dI_{x,c}+dA\tilde{y}^{\,2}")
+        st.latex(r"dI_x=\frac{1}{12}h^3dx+h\,dx\left(\frac{y_T+y_B}{2}\right)^2=\frac{y_T^3-y_B^3}{3}dx")
+    else:
+        st.write("Treat the differential strip as a thin rectangle of width w = xR - xL and height dy.")
+        st.latex(r"dI_{y,c}=\frac{1}{12}(dy)w^3,\qquad dA=w\,dy,\qquad \tilde{x}=\frac{x_R+x_L}{2}")
+        st.latex(r"dI_y=dI_{y,c}+dA\tilde{x}^{\,2}")
+        st.latex(r"dI_y=\frac{1}{12}w^3dy+w\,dy\left(\frac{x_R+x_L}{2}\right)^2=\frac{x_R^3-x_L^3}{3}dy")
+    st.info("The direct-integration and parallel-axis approaches give the same differential-strip formula. Use the parallel-axis route when following the lecture notes; use direct integration as verification.")
 
     st.markdown("### Step 7: Shift to centroidal axes when required")
     st.latex(rf"I_{{\bar{{x}}}}=I_x-A\bar{{y}}^2={sp.latex(data['i_x_bar'])}\;\mathrm{{units}}^4")
