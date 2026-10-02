@@ -613,8 +613,122 @@ def render_theory_tab():
     st.markdown('<div class="hint-box"><b>Recommended order:</b> identify the geometry, define dA, locate the strip centroid, set the limits, calculate area and centroid, then calculate second moments.</div>', unsafe_allow_html=True)
 
 
+def strip_coordinate_figure(cut):
+    """Visualise local half-dimension versus global centroid coordinate."""
+    fig, ax = plt.subplots(figsize=(7.4, 3.8))
+    bbox = dict(boxstyle="round,pad=0.25", fc="white", ec="#cbd5e1", alpha=0.92)
+    if cut == "vertical":
+        y_bottom, y_top = 2.0, 6.0
+        x0, width = 2.0, 0.42
+        y_centroid = (y_top + y_bottom) / 2
+        ax.add_patch(Rectangle((x0-width/2, y_bottom), width, y_top-y_bottom,
+                               facecolor="#FF7A00", edgecolor="#9A3412", lw=2.2, alpha=0.60))
+        ax.axhline(0, color="#111827", lw=1.5)
+        ax.hlines([y_bottom, y_top], 0.5, 3.5, colors=["#00A651", "#0047AB"], lw=2.5)
+        ax.scatter(x0, y_centroid, s=115, color="#7A00CC", edgecolor="white", zorder=5)
+        ax.annotate(r"lower boundary $y_B$", (0.55, y_bottom), xytext=(0, -25),
+                    textcoords="offset points", color="#00823B", weight="bold", bbox=bbox)
+        ax.annotate(r"upper boundary $y_T$", (0.55, y_top), xytext=(0, 9),
+                    textcoords="offset points", color="#0047AB", weight="bold", bbox=bbox)
+        ax.annotate(r"strip centroid $\tilde{y}$", (x0, y_centroid), xytext=(45, 0),
+                    textcoords="offset points", color="#7A00CC", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="->", color="#7A00CC"))
+        ax.annotate("local half-height\n$(y_T-y_B)/2$", (x0-width/2, y_centroid),
+                    xytext=(-105, 0), textcoords="offset points", ha="center",
+                    color="#9A3412", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="<->", color="#FF7A00"))
+        ax.annotate("global coordinate\n$y_B+(y_T-y_B)/2$", (x0+width/2, y_centroid),
+                    xytext=(102, -55), textcoords="offset points", ha="center",
+                    color="#E00034", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="->", color="#E00034"))
+        ax.text(0.15, -0.12, "x-axis reference", color="#111827", weight="bold", bbox=bbox)
+        ax.set_xlim(0, 4.2); ax.set_ylim(-0.5, 7.0); ax.set_xlabel("x"); ax.set_ylabel("y")
+        ax.set_title("Vertical strip: local distance versus global y-coordinate", weight="bold")
+    else:
+        x_left, x_right = 2.0, 6.0
+        y0, height = 2.0, 0.42
+        x_centroid = (x_right + x_left) / 2
+        ax.add_patch(Rectangle((x_left, y0-height/2), x_right-x_left, height,
+                               facecolor="#FF7A00", edgecolor="#9A3412", lw=2.2, alpha=0.60))
+        ax.axvline(0, color="#111827", lw=1.5)
+        ax.vlines([x_left, x_right], 0.5, 3.5, colors=["#00A651", "#0047AB"], lw=2.5)
+        ax.scatter(x_centroid, y0, s=115, color="#7A00CC", edgecolor="white", zorder=5)
+        ax.annotate(r"left boundary $x_L$", (x_left, 0.55), xytext=(-25, -22),
+                    textcoords="offset points", color="#00823B", weight="bold", bbox=bbox)
+        ax.annotate(r"right boundary $x_R$", (x_right, 0.55), xytext=(-25, -22),
+                    textcoords="offset points", color="#0047AB", weight="bold", bbox=bbox)
+        ax.annotate(r"strip centroid $\tilde{x}$", (x_centroid, y0), xytext=(0, 42),
+                    textcoords="offset points", ha="center", color="#7A00CC", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="->", color="#7A00CC"))
+        ax.annotate("local half-width\n$(x_R-x_L)/2$", (x_centroid, y0-height/2),
+                    xytext=(0, -62), textcoords="offset points", ha="center",
+                    color="#9A3412", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="<->", color="#FF7A00"))
+        ax.annotate("global coordinate\n$x_L+(x_R-x_L)/2$", (x_centroid, y0+height/2),
+                    xytext=(85, 32), textcoords="offset points", ha="center",
+                    color="#E00034", weight="bold", bbox=bbox,
+                    arrowprops=dict(arrowstyle="->", color="#E00034"))
+        ax.text(-0.15, 0.15, "y-axis reference", rotation=90, color="#111827", weight="bold", bbox=bbox)
+        ax.set_xlim(-0.5, 7.0); ax.set_ylim(0, 4.2); ax.set_xlabel("x"); ax.set_ylabel("y")
+        ax.set_title("Horizontal strip: local distance versus global x-coordinate", weight="bold")
+    ax.grid(alpha=0.10)
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.86, bottom=0.15)
+    return fig
+
+
+def parallel_axis_strip_figure(cut):
+    """Show the two terms in the parallel-axis theorem for a differential strip."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8.8, 3.9))
+    if cut == "vertical":
+        yb, yt, xc = 1.5, 5.5, 2.0
+        yc = (yb + yt) / 2
+        for ax in (ax1, ax2):
+            ax.add_patch(Rectangle((xc-0.18, yb), 0.36, yt-yb,
+                                   facecolor="#FF7A00", edgecolor="#9A3412", lw=2, alpha=.58))
+            ax.scatter(xc, yc, s=90, color="#7A00CC", edgecolor="white", zorder=5)
+            ax.set_xlim(0.5, 3.5); ax.set_ylim(0, 6.5); ax.set_aspect("equal"); ax.grid(alpha=.10)
+        ax1.axhline(yc, color="#7A00CC", ls="--", lw=1.7)
+        ax1.set_title(r"Local term: $dI_{x,c}=\frac{1}{12}(dx)h^3$", fontsize=10, weight="bold")
+        ax2.axhline(0, color="#111827", lw=1.5)
+        ax2.annotate(r"global distance $\tilde{y}$", (xc, yc), xytext=(38, -8),
+                     textcoords="offset points", color="#E00034", weight="bold",
+                     arrowprops=dict(arrowstyle="->", color="#E00034"))
+        ax2.set_title(r"Shift term: $dA\tilde{y}^{2}$", fontsize=10, weight="bold")
+    else:
+        xl, xr, yc = 1.5, 5.5, 2.0
+        xc = (xl + xr) / 2
+        for ax in (ax1, ax2):
+            ax.add_patch(Rectangle((xl, yc-0.18), xr-xl, 0.36,
+                                   facecolor="#FF7A00", edgecolor="#9A3412", lw=2, alpha=.58))
+            ax.scatter(xc, yc, s=90, color="#7A00CC", edgecolor="white", zorder=5)
+            ax.set_xlim(0, 6.5); ax.set_ylim(0.5, 3.5); ax.set_aspect("equal"); ax.grid(alpha=.10)
+        ax1.axvline(xc, color="#7A00CC", ls="--", lw=1.7)
+        ax1.set_title(r"Local term: $dI_{y,c}=\frac{1}{12}(dy)w^3$", fontsize=10, weight="bold")
+        ax2.axvline(0, color="#111827", lw=1.5)
+        ax2.annotate(r"global distance $\tilde{x}$", (xc, yc), xytext=(0, 38),
+                     textcoords="offset points", ha="center", color="#E00034", weight="bold",
+                     arrowprops=dict(arrowstyle="->", color="#E00034"))
+        ax2.set_title(r"Shift term: $dA\tilde{x}^{2}$", fontsize=10, weight="bold")
+    for ax in (ax1, ax2):
+        ax.set_xlabel("x"); ax.set_ylabel("y")
+    fig.suptitle("Parallel-axis theorem: local strip contribution + axis-shift contribution", weight="bold")
+    fig.subplots_adjust(left=0.07, right=0.98, top=0.79, bottom=0.14, wspace=0.28)
+    return fig
+
+
+def render_visual_figure(fig, caption):
+    left, centre, right = st.columns([0.12, 1.9, 0.12])
+    with centre:
+        st.pyplot(fig, use_container_width=True)
+        st.caption(caption)
+
+
 def render_strip_centroid_note(cut):
     """Clarify local half-dimension versus global centroid coordinate."""
+    render_visual_figure(
+        strip_coordinate_figure(cut),
+        "The orange strip is shown away from the reference axis so the local half-dimension and the global centroid coordinate are visibly different.",
+    )
     if cut == "vertical":
         st.markdown(
             '<div class="warning-box"><b>Do not confuse two different distances.</b><br>'
@@ -688,6 +802,10 @@ def render_formula_tab():
     st.markdown('<div class="info-box"><b>Two valid routes:</b> the parallel-axis theorem matches your lecture notes and is usually the easier starting point. Direct integration explains the same result from the definition. Both routes are equivalent.</div>', unsafe_allow_html=True)
     st.markdown("### Vertical strip: obtaining dIx")
     render_strip_centroid_note("vertical")
+    render_visual_figure(
+        parallel_axis_strip_figure("vertical"),
+        "The local rectangle term accounts for the strip about its own centroidal axis; the shift term moves that result to the global x-axis.",
+    )
     c1, c2 = st.columns(2, gap="large")
     with c1:
         st.markdown("#### Parallel-axis theorem")
@@ -704,6 +822,10 @@ def render_formula_tab():
         st.latex(r"dI_x=\frac{y_T^3-y_B^3}{3}dx")
     st.markdown("### Horizontal strip: obtaining dIy")
     render_strip_centroid_note("horizontal")
+    render_visual_figure(
+        parallel_axis_strip_figure("horizontal"),
+        "The local rectangle term accounts for the strip about its own centroidal axis; the shift term moves that result to the global y-axis.",
+    )
     c1, c2 = st.columns(2, gap="large")
     with c1:
         st.markdown("#### Parallel-axis theorem")
