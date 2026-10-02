@@ -267,7 +267,7 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
                     xytext=(-62, 35), textcoords="offset points", ha="center",
                     color=purple, weight="bold", bbox=bbox,
                     arrowprops=dict(arrowstyle="->", color=purple, alpha=.8))
-    if show_area_centroid or stage in ("centroid", "all_centroid"):
+    if show_area_centroid or stage == "all_centroid":
         whole = (float(data["x_bar"]), float(data["y_bar"]))
         ax.scatter(*whole, marker="X", s=180, color=red, edgecolor="white", linewidth=1.2, zorder=9)
         ax.annotate(r"complete-area centroid" + "\n" + r"$(\bar{x},\bar{y})$", xy=whole,
@@ -492,6 +492,33 @@ def render_learn_tab():
     st.latex(r"I_y=\int_0^4\frac{(4-y)^3}{3}dy=\frac{64}{3}")
     st.success("Cross-check passed: both strip directions give A = 8, x̄ = 4/3, ȳ = 4/3, Ix = 64/3, and Iy = 64/3.")
 
+def render_definite_integral(label, integrand, variable, lower, upper, unit_power=None):
+    """Show setup, antiderivative, limit substitution, and exact result."""
+    integrand = sp.simplify(integrand)
+    lower = sp.sympify(lower)
+    upper = sp.sympify(upper)
+    antiderivative = sp.simplify(sp.integrate(integrand, variable))
+    upper_value = sp.simplify(antiderivative.subs(variable, upper))
+    lower_value = sp.simplify(antiderivative.subs(variable, lower))
+    result = sp.simplify(upper_value - lower_value)
+    unit_text = rf"\;\mathrm{{units}}^{{{unit_power}}}" if unit_power else ""
+
+    st.latex(
+        rf"{label}=\int_{{{sp.latex(lower)}}}^{{{sp.latex(upper)}}}"
+        rf"\left({sp.latex(integrand)}\right)\,d{sp.latex(variable)}"
+    )
+    st.latex(
+        rf"{label}=\left[{sp.latex(antiderivative)}\right]_"
+        rf"{{{sp.latex(lower)}}}^{{{sp.latex(upper)}}}"
+    )
+    st.latex(
+        rf"{label}=\left({sp.latex(upper_value)}\right)-"
+        rf"\left({sp.latex(lower_value)}\right)"
+        rf"={sp.latex(result)}{unit_text}"
+    )
+    return result
+
+
 def render_detailed_solution(problem):
     data = problem["data"]
     vertical = data["cut"] == "vertical"
@@ -523,33 +550,86 @@ def render_detailed_solution(problem):
     st.latex(rf"{sp.latex(data['lower'])}\le {variable}\le {sp.latex(data['upper'])}")
 
     st.markdown("### Step 4: Calculate the total area")
-    st.latex(rf"A=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\left({sp.latex(data['dA'])}\right){differential}")
-    st.latex(rf"A={sp.latex(data['area'])}\;\mathrm{{units}}^2\approx {fmt(data['area'])}\;\mathrm{{units}}^2")
+    st.write("Integrate the differential-area expression over the complete range of the strip variable.")
+    calculated_area = render_definite_integral(
+        "A", data["dA"], x if vertical else y,
+        data["lower"], data["upper"], 2
+    )
+    st.latex(rf"A={sp.latex(calculated_area)}\;\mathrm{{units}}^2\approx {fmt(calculated_area)}\;\mathrm{{units}}^2")
 
     st.markdown("### Step 5: Calculate the centroid using the full centroid equations")
-    st.write("Substitute the strip-centroid coordinate and dA directly into each centroid equation.")
-    st.latex(rf"\bar{{x}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\tilde{{x}}\,dA}}{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}dA}}")
-    st.latex(rf"\bar{{x}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\left({sp.latex(data['x_tilde'])}\right)\left({sp.latex(data['dA'])}\right){differential}}}{{{sp.latex(data['area'])}}}={sp.latex(data['x_bar'])}\approx {fmt(data['x_bar'])}\;\mathrm{{units}}")
-    st.latex(rf"\bar{{y}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\tilde{{y}}\,dA}}{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}dA}}")
-    st.latex(rf"\bar{{y}}=\frac{{\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\left({sp.latex(data['y_tilde'])}\right)\left({sp.latex(data['dA'])}\right){differential}}}{{{sp.latex(data['area'])}}}={sp.latex(data['y_bar'])}\approx {fmt(data['y_bar'])}\;\mathrm{{units}}")
+    st.write("Use the global centroid coordinates of the moving strip in the centroid equations.")
+    st.latex(r"\bar{x}=\frac{\int \tilde{x}\,dA}{\int dA}=\frac{\int \tilde{x}\,dA}{A}")
+    st.latex(r"\bar{y}=\frac{\int \tilde{y}\,dA}{\int dA}=\frac{\int \tilde{y}\,dA}{A}")
+
+    st.markdown("#### 5A. Calculate the numerator for x̄")
+    x_numerator_integrand = sp.simplify(data["x_tilde"] * data["dA"])
+    x_numerator = render_definite_integral(
+        r"\int \tilde{x}\,dA", x_numerator_integrand,
+        x if vertical else y, data["lower"], data["upper"], 3
+    )
+    st.latex(
+        rf"\bar{{x}}=\frac{{{sp.latex(x_numerator)}}}"
+        rf"{{{sp.latex(data['area'])}}}"
+        rf"={sp.latex(data['x_bar'])}\;\mathrm{{units}}"
+        rf"\approx {fmt(data['x_bar'])}\;\mathrm{{units}}"
+    )
+
+    st.markdown("#### 5B. Calculate the numerator for ȳ")
+    y_numerator_integrand = sp.simplify(data["y_tilde"] * data["dA"])
+    y_numerator = render_definite_integral(
+        r"\int \tilde{y}\,dA", y_numerator_integrand,
+        x if vertical else y, data["lower"], data["upper"], 3
+    )
+    st.latex(
+        rf"\bar{{y}}=\frac{{{sp.latex(y_numerator)}}}"
+        rf"{{{sp.latex(data['area'])}}}"
+        rf"={sp.latex(data['y_bar'])}\;\mathrm{{units}}"
+        rf"\approx {fmt(data['y_bar'])}\;\mathrm{{units}}"
+    )
 
     st.markdown("### Step 6: Calculate second moments about the shown axes")
+    st.latex(r"I_x=\int_A y^2\,dA,\qquad I_y=\int_A x^2\,dA")
+    integration_variable = x if vertical else y
+
     if vertical:
-        st.write("Start from Ix = ∫A y²dA and Iy = ∫A x²dA. For a vertical strip, dA = dy dx.")
-        st.write("Because x is effectively constant across the thin strip:")
-        st.latex(r"dI_y=x^2dA=x^2(y_T-y_B)dx")
-        st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}x^2[y_T-y_B]dx={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
-        st.write("For Ix, y changes from yB to yT inside the strip, so perform the inner y-integration first:")
-        st.latex(r"dI_x=\int_{y_B}^{y_T}y^2dy\,dx=\frac{y_T^3-y_B^3}{3}dx")
-        st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{y_T^3-y_B^3}}{{3}}dx={sp.latex(data['i_x'])}\;\mathrm{{units}}^4")
+        st.markdown("#### 6A. Calculate Iy about the shown y-axis")
+        st.write("The x-coordinate is effectively constant across an infinitesimally thin vertical strip.")
+        st.latex(r"dI_y=x^2dA=x^2[y_T(x)-y_B(x)]dx")
+        iy_integrand = sp.simplify(x**2 * data["dA"])
+        render_definite_integral(
+            "I_y", iy_integrand, x,
+            data["lower"], data["upper"], 4
+        )
+
+        st.markdown("#### 6B. Calculate Ix about the shown x-axis")
+        st.write("The y-coordinate varies through the strip height, so integrate y² from the lower boundary to the upper boundary.")
+        st.latex(r"dI_x=\int_{y_B}^{y_T}y^2\,dy\,dx")
+        st.latex(r"dI_x=\frac{y_T^3-y_B^3}{3}dx")
+        ix_integrand = sp.simplify((data["top"]**3 - data["bottom"]**3) / 3)
+        render_definite_integral(
+            "I_x", ix_integrand, x,
+            data["lower"], data["upper"], 4
+        )
     else:
-        st.write("Start from Ix = ∫A y²dA and Iy = ∫A x²dA. For a horizontal strip, dA = dx dy.")
-        st.write("Because y is effectively constant across the thin strip:")
-        st.latex(r"dI_x=y^2dA=y^2(x_R-x_L)dy")
-        st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}y^2[x_R-x_L]dy={sp.latex(data['i_x'])}\;\mathrm{{units}}^4")
-        st.write("For Iy, x changes from xL to xR inside the strip, so perform the inner x-integration first:")
-        st.latex(r"dI_y=\int_{x_L}^{x_R}x^2dx\,dy=\frac{x_R^3-x_L^3}{3}dy")
-        st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{x_R^3-x_L^3}}{{3}}dy={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
+        st.markdown("#### 6A. Calculate Ix about the shown x-axis")
+        st.write("The y-coordinate is effectively constant across an infinitesimally thin horizontal strip.")
+        st.latex(r"dI_x=y^2dA=y^2[x_R(y)-x_L(y)]dy")
+        ix_integrand = sp.simplify(y**2 * data["dA"])
+        render_definite_integral(
+            "I_x", ix_integrand, y,
+            data["lower"], data["upper"], 4
+        )
+
+        st.markdown("#### 6B. Calculate Iy about the shown y-axis")
+        st.write("The x-coordinate varies through the strip width, so integrate x² from the left boundary to the right boundary.")
+        st.latex(r"dI_y=\int_{x_L}^{x_R}x^2\,dx\,dy")
+        st.latex(r"dI_y=\frac{x_R^3-x_L^3}{3}dy")
+        iy_integrand = sp.simplify((data["right"]**3 - data["left"]**3) / 3)
+        render_definite_integral(
+            "I_y", iy_integrand, y,
+            data["lower"], data["upper"], 4
+        )
 
     st.markdown("#### Parallel-axis theorem alternative for the differential strip")
     if vertical:
@@ -888,6 +968,16 @@ def render_interactive_tab(problem):
         st.latex(rf"I_x={sp.latex(data['i_x'])},\qquad I_y={sp.latex(data['i_y'])}")
     with right:
         render_interactive_diagram(problem, key_prefix=f"interactive_{problem['uid']}")
+
+    st.markdown("---")
+    st.markdown(
+        '<div class="info-box"><b>Fully worked solution for this generated example:</b> '
+        'Follow every stage below, including the coded process figures, integral setup, '
+        'antiderivatives, limit substitution, centroid calculations, second moments, '
+        'parallel-axis alternative, and final checks.</div>',
+        unsafe_allow_html=True,
+    )
+    render_detailed_solution(problem)
 
 render_header()
 
