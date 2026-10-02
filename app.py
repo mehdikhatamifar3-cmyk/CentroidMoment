@@ -41,7 +41,7 @@ st.markdown(
         background: #ffffff !important;
         color: var(--text) !important;
       }
-      .block-container { max-width: 1450px; padding-top: 1.0rem; padding-bottom: 2.4rem; }
+      .block-container { max-width: 1280px; padding-top: 1.0rem; padding-bottom: 2.4rem; }
       [data-testid="stSidebar"] { background: #eef1f5 !important; border-right: 1px solid #dde2e8; }
       .app-header {
         display: grid; grid-template-columns: 230px 1fr 210px;
@@ -207,7 +207,7 @@ def generate_problem(level, seed):
 
 def region_figure(data, strip_position, show_area_centroid=False, title=None, stage="all"):
     """Draw the region from its exact equations with transparent, non-overlapping annotations."""
-    fig, ax = plt.subplots(figsize=(8.2, 5.8))
+    fig, ax = plt.subplots(figsize=(6.6, 4.5))
     blue, navy, green = "#38bdf8", "#0047AB", "#00A651"
     orange, purple, red = "#FF7A00", "#7A00CC", "#E00034"
     lower, upper = map(float, (data["lower"], data["upper"]))
@@ -278,8 +278,8 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
     ax.axhline(0, color="#111827", lw=1.4); ax.axvline(0, color="#111827", lw=1.4)
     ax.grid(alpha=0.12); ax.set_xlabel("x"); ax.set_ylabel("y")
     ax.set_aspect("equal", adjustable="datalim")
-    ax.legend(loc="upper right", fontsize=9, framealpha=.88)
-    if title: ax.set_title(title, weight="bold", pad=12)
+    ax.legend(loc="upper right", fontsize=8, framealpha=.90)
+    if title: ax.set_title(title, weight="bold", pad=9, fontsize=11)
     fig.tight_layout(pad=1.5)
     return fig
 
@@ -325,28 +325,33 @@ def render_interactive_diagram(problem, key_prefix):
 
 def render_static_diagram(data, title, show_centroid=True):
     position = float((data["lower"] + data["upper"]) / 2)
-    st.pyplot(region_figure(data, position, show_centroid, title), use_container_width=True)
+    left_space, figure_col, right_space = st.columns([0.45, 1.6, 0.45])
+    with figure_col:
+        st.pyplot(region_figure(data, position, show_centroid, title), use_container_width=True)
 
 
 def render_solution_process_figures(data):
-    """Use three coded figures to visually build the solution without repeated widgets."""
+    """Show a compact visual sequence without adding duplicate interactive widgets."""
     position = float(data["lower"] + 0.58 * (data["upper"] - data["lower"]))
-    c1, c2 = st.columns(2, gap="large")
+    c1, c2, c3 = st.columns(3, gap="medium")
     with c1:
-        st.markdown("#### Figure A: Boundaries and differential strip")
-        st.pyplot(region_figure(data, position, False,
-                  "1. Identify boundaries and form dA", stage="strip"),
-                  use_container_width=True)
+        st.markdown("#### 1. Boundaries and strip")
+        st.pyplot(
+            region_figure(data, position, False, "Form the differential area", stage="strip"),
+            use_container_width=True,
+        )
     with c2:
-        st.markdown("#### Figure B: Strip-centroid coordinates")
-        st.pyplot(region_figure(data, position, False,
-                  "2. Locate the centroid of the moving strip", stage="centroid"),
-                  use_container_width=True)
-    st.markdown("#### Figure C: Complete-area centroid and reference axes")
-    st.pyplot(region_figure(data, position, True,
-              "3. Integrate over the complete region and locate the area centroid", stage="all"),
-              use_container_width=True)
-
+        st.markdown("#### 2. Strip centroid")
+        st.pyplot(
+            region_figure(data, position, False, "Locate the strip centroid", stage="centroid"),
+            use_container_width=True,
+        )
+    with c3:
+        st.markdown("#### 3. Complete-area centroid")
+        st.pyplot(
+            region_figure(data, position, True, "Integrate over the region", stage="all"),
+            use_container_width=True,
+        )
 
 def render_learn_tab():
     st.markdown("## Learn the method")
@@ -427,7 +432,6 @@ def render_learn_tab():
         st.write("If xL = 0 and xR = w, this becomes dIy = w³dy/3.")
     st.markdown('<div class="hint-box"><b>Which is easier?</b> For first-year students, the parallel-axis approach is usually easier to connect to prior learning because the strip is a thin rectangle. Direct integration is more fundamental and is valuable as a check. The app now shows both.</div>', unsafe_allow_html=True)
 
-    st.markdown("### 3. Area, centroid, and centroidal axes")
     st.markdown("### 3. Area, centroid, and centroidal axes")
     c1, c2 = st.columns(2, gap="large")
     with c1:
@@ -577,7 +581,7 @@ def render_detailed_solution(problem):
 
 render_header()
 
-st.sidebar.markdown("## Problem setup")
+st.sidebar.markdown("## Teaching example")
 level_names = {
     1: "1 · Rectangle",
     2: "2 · Triangle",
@@ -593,12 +597,12 @@ if "current_seed" not in st.session_state:
 if st.session_state.get("current_level") != level:
     st.session_state.current_level = level
     st.session_state.current_seed = SYSTEM_RNG.randrange(1, 2**63)
-if st.sidebar.button("🎲 New random question", use_container_width=True):
+if st.sidebar.button("🎲 Generate another example", use_container_width=True):
     st.session_state.current_seed = SYSTEM_RNG.randrange(1, 2**63)
 
 problem = generate_problem(level, st.session_state.current_seed)
 data = problem["data"]
-st.sidebar.caption(f"Current problem: {problem['title']}")
+st.sidebar.caption(f"Current example: {problem['title']}")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Colour key")
 st.sidebar.markdown("🔵 Complete region  \n🔷 Upper / right boundary  \n🟢 Lower / left boundary  \n🟧 Differential strip  \n🟣 Strip centroid  \n❌ Complete-area centroid  \n⚫ Reference x- and y-axes")
@@ -614,106 +618,54 @@ labels = {
 }
 
 tabs = st.tabs([
-    "0. Learn the topic",
-    "1. Problem",
-    "2. Build the method",
-    "3. Solve and check",
-    "4. Detailed solution",
+    "0. Learn the method",
+    "1. Explore a teaching example",
+    "2. Step-by-step explanation",
 ])
 
 with tabs[0]:
     render_learn_tab()
 
 with tabs[1]:
-    st.markdown("## Current problem")
-    left, right = st.columns([0.9, 1.1], gap="large")
+    st.markdown("## Explore a teaching example")
+    st.markdown(
+        '<div class="info-box"><b>How to use this page:</b> move the differential strip, identify its boundaries and centroid, then reveal the centroid of the complete area. The complete derivation is provided in the next tab.</div>',
+        unsafe_allow_html=True,
+    )
+    left, right = st.columns([1.0, 1.15], gap="large")
     with left:
-        st.caption(f"Level {level} | Difficulty: {problem['difficulty']}")
+        st.caption(f"Level {level} | {problem['difficulty']}")
         st.markdown(f"### {problem['title']}")
         st.write(problem["purpose"])
         if data["cut"] == "vertical":
+            st.markdown("#### Geometry")
             st.latex(rf"y_T(x)={sp.latex(data['top'])},\qquad y_B(x)={sp.latex(data['bottom'])}")
             st.latex(rf"{sp.latex(data['lower'])}\le x\le {sp.latex(data['upper'])}")
+            st.markdown("#### Strip definition")
+            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dx")
+            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
         else:
+            st.markdown("#### Geometry")
             st.latex(rf"x_R(y)={sp.latex(data['right'])},\qquad x_L(y)={sp.latex(data['left'])}")
             st.latex(rf"{sp.latex(data['lower'])}\le y\le {sp.latex(data['upper'])}")
+            st.markdown("#### Strip definition")
+            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right)dy")
+            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad \tilde{{y}}={sp.latex(data['y_tilde'])}")
         st.markdown(
-            '<div class="method-card"><b>Your task</b><br>'
-            '1. Choose the cut.<br>2. Write dA.<br>3. Locate the strip centroid.<br>'
-            '4. Establish the limits.<br>5. Build and evaluate the integrals.<br>'
-            '6. Check units and physical reasonableness.</div>',
+            '<div class="method-card"><b>Observe in the diagram</b><br>'
+            '• which two boundaries define the strip;<br>'
+            '• why the thickness is dx or dy;<br>'
+            '• how the strip-centroid coordinates change;<br>'
+            '• where the complete-area centroid is located.</div>',
             unsafe_allow_html=True,
         )
     with right:
         st.markdown("### Interactive coded diagram")
-        render_interactive_diagram(problem, key_prefix=f"problem_{problem['uid']}")
+        render_interactive_diagram(problem, key_prefix=f"example_{problem['uid']}")
 
 with tabs[2]:
-    st.markdown("## Build the method")
-    st.write("Make the geometric decisions first. The feedback identifies exactly where the setup needs correction.")
-    expected_cut = "Vertical" if data["cut"] == "vertical" else "Horizontal"
-    expected_differential = "dx" if data["cut"] == "vertical" else "dy"
-    c1, c2 = st.columns(2)
-    cut_choice = c1.radio("1. Cutting direction", ["Vertical", "Horizontal"], key=f"cut_{problem['uid']}")
-    differential = c2.radio("2. Strip thickness", ["dx", "dy"], key=f"diff_{problem['uid']}")
-    lower = st.number_input("3. Lower integration limit", value=float(data["lower"]), key=f"lower_{problem['uid']}")
-    upper = st.number_input("4. Upper integration limit", value=float(data["upper"]), key=f"upper_{problem['uid']}")
-    if st.button("Check my setup", type="primary", key=f"method_check_{problem['uid']}"):
-        correct = True
-        if cut_choice != expected_cut:
-            st.error(f"Use a {expected_cut.lower()} cut because the supplied boundaries are most direct in that orientation.")
-            correct = False
-        if differential != expected_differential:
-            st.error(f"A {expected_cut.lower()} strip has thickness {expected_differential}.")
-            correct = False
-        if not math.isclose(lower, float(data["lower"]), abs_tol=1e-8):
-            st.error("Recheck the lower coordinate reached by the integration variable.")
-            correct = False
-        if not math.isclose(upper, float(data["upper"]), abs_tol=1e-8):
-            st.error("Recheck the upper coordinate reached by the integration variable.")
-            correct = False
-        if correct:
-            st.success("Correct setup. The strip, differential, and limits are consistent.")
-            st.latex(rf"dA=\left({sp.latex(data['dA'])}\right){expected_differential}")
-            st.latex(rf"\tilde{{x}}={sp.latex(data['x_tilde'])},\qquad\tilde{{y}}={sp.latex(data['y_tilde'])}")
-
-with tabs[3]:
-    st.markdown("## Solve and check")
     st.markdown(
-        '<div class="info-box">Enter final numerical values. Keep full precision during calculation and round only at the end.</div>',
+        '<div class="info-box"><b>Teaching sequence:</b> geometry → differential area → strip centroid → integration limits → area → centroid → second moments → centroidal axes.</div>',
         unsafe_allow_html=True,
     )
-    entered = {}
-    columns = st.columns(2)
-    for index, key in enumerate(problem["asks"]):
-        label, unit = labels[key]
-        with columns[index % 2]:
-            entered[key] = st.number_input(
-                f"{label} ({unit})",
-                value=0.0,
-                format="%.5f",
-                key=f"answer_{key}_{problem['uid']}",
-            )
-    if st.button("Check final answers", type="primary", key=f"answer_check_{problem['uid']}"):
-        all_correct = True
-        for key in problem["asks"]:
-            answer = make_answer(*labels[key], data[key]) if False else None
-            expected = float(sp.N(data[key]))
-            tolerance = max(0.015, 0.01 * max(1.0, abs(expected)))
-            result = abs(entered[key] - expected) <= tolerance
-            all_correct = all_correct and result
-            if result:
-                st.markdown(f'<div class="good">{labels[key][0]}: correct.</div>', unsafe_allow_html=True)
-            else:
-                detail = f" Expected approximately {fmt(expected)} {labels[key][1]}."
-                st.markdown(
-                    f'<div class="bad">{labels[key][0]}: check the strip setup, limits, formula, and arithmetic.{detail}</div>',
-                    unsafe_allow_html=True,
-                )
-        if all_correct:
-            st.success("Excellent. All requested area properties are correct.")
-    st.markdown("### Reasonableness checks")
-    st.write("• Area must be positive.  \n• The centroid should lie inside the region.  \n• Second moments must be positive.  \n• Centroid units are length; second-moment units are length⁴.")
-
-with tabs[4]:
     render_detailed_solution(problem)
