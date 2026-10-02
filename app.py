@@ -234,7 +234,7 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
         ax.annotate(r"height $=y_T-y_B$", xy=strip_centroid, xytext=(42, 0),
                     textcoords="offset points", va="center", color="#9a3412", weight="bold",
                     bbox=bbox, arrowprops=dict(arrowstyle="->", color=orange, alpha=.8))
-        boundary_note = rf"$y_T={sp.latex(data['top'])}$" + r"\n" + rf"$y_B={sp.latex(data['bottom'])}$"
+        boundary_note = rf"$y_T={sp.latex(data['top'])}$" + "\n" + rf"$y_B={sp.latex(data['bottom'])}$"
         ax.text(0.02, 0.98, boundary_note, transform=ax.transAxes, va="top", ha="left",
                 color="#0f172a", fontsize=10, bbox=bbox)
     else:
@@ -257,20 +257,20 @@ def region_figure(data, strip_position, show_area_centroid=False, title=None, st
         ax.annotate(r"width $=x_R-x_L$", xy=strip_centroid, xytext=(0, 34),
                     textcoords="offset points", ha="center", color="#9a3412", weight="bold",
                     bbox=bbox, arrowprops=dict(arrowstyle="->", color=orange, alpha=.8))
-        boundary_note = rf"$x_R={sp.latex(data['right'])}$" + r"\n" + rf"$x_L={sp.latex(data['left'])}$"
+        boundary_note = rf"$x_R={sp.latex(data['right'])}$" + "\n" + rf"$x_L={sp.latex(data['left'])}$"
         ax.text(0.02, 0.98, boundary_note, transform=ax.transAxes, va="top", ha="left",
                 color="#0f172a", fontsize=10, bbox=bbox)
 
     if stage in ("strip", "centroid", "all"):
         ax.scatter(*strip_centroid, s=90, color=purple, edgecolor="white", linewidth=1.0, zorder=8)
-        ax.annotate(r"strip centroid" + r"\n" + r"$(\tilde{x},\tilde{y})$", xy=strip_centroid,
+        ax.annotate(r"strip centroid" + "\n" + r"$(\tilde{x},\tilde{y})$", xy=strip_centroid,
                     xytext=(-62, 35), textcoords="offset points", ha="center",
                     color=purple, weight="bold", bbox=bbox,
                     arrowprops=dict(arrowstyle="->", color=purple, alpha=.8))
     if show_area_centroid or stage in ("centroid", "all_centroid"):
         whole = (float(data["x_bar"]), float(data["y_bar"]))
         ax.scatter(*whole, marker="X", s=180, color=red, edgecolor="white", linewidth=1.2, zorder=9)
-        ax.annotate(r"complete-area centroid" + r"\n" + r"$(\bar{x},\bar{y})$", xy=whole,
+        ax.annotate(r"complete-area centroid" + "\n" + r"$(\bar{x},\bar{y})$", xy=whole,
                     xytext=(62, -38), textcoords="offset points", ha="center",
                     color=red, weight="bold", bbox=bbox,
                     arrowprops=dict(arrowstyle="->", color=red, alpha=.8))
@@ -298,7 +298,7 @@ def render_interactive_diagram(problem, key_prefix):
         key=f"{key_prefix}_area_centroid",
     )
     st.pyplot(region_figure(data, position, show), use_container_width=True)
-    st.caption("Blue: complete region | Orange: differential strip | Purple: strip centroid | Red X: complete-area centroid")
+    st.caption("Light blue: complete region | Dark blue: upper/right boundary | Green: lower/left boundary | Orange: differential strip | Purple: strip centroid | Red X: complete-area centroid | Grey: reference axes")
 
 
 def render_static_diagram(data, title, show_centroid=True):
@@ -356,8 +356,15 @@ def render_learn_tab():
         st.latex(r"dA=[y_T(x)-y_B(x)]\,dx")
         st.latex(r"\tilde{x}=x,\qquad \tilde{y}=\frac{y_T+y_B}{2}")
         st.write("Choose this cut when the upper and lower boundaries are naturally written as functions of x. The integration limits are x-coordinates.")
-        st.latex(r"I_y=\int x^2[y_T-y_B]\,dx")
-        st.latex(r"I_x=\int\frac{y_T^3-y_B^3}{3}\,dx")
+        st.markdown("##### How the second-moment formulas are obtained")
+        st.write("For the moment about the y-axis, every point in the thin vertical strip is at approximately the same x-coordinate. Starting from the definition:")
+        st.latex(r"I_y=\int_A x^2\,dA")
+        st.latex(r"dI_y=x^2dA=x^2[y_T(x)-y_B(x)]dx")
+        st.latex(r"I_y=\int_a^b x^2[y_T(x)-y_B(x)]\,dx")
+        st.write("For the moment about the x-axis, y varies through the full depth of the strip. Use a small element dA = dy dx inside the strip and integrate first from y_B to y_T:")
+        st.latex(r"dI_x=\int_{y_B}^{y_T}y^2\,dy\,dx")
+        st.latex(r"dI_x=\left[\frac{y^3}{3}\right]_{y_B}^{y_T}dx=\frac{y_T^3-y_B^3}{3}dx")
+        st.latex(r"I_x=\int_a^b\frac{y_T^3-y_B^3}{3}\,dx")
     with horizontal_col:
         st.markdown("#### Horizontal cutting")
         demo = solve_horizontal(4 - y**2 / 4, 0, 0, 4)
@@ -365,8 +372,15 @@ def render_learn_tab():
         st.latex(r"dA=[x_R(y)-x_L(y)]\,dy")
         st.latex(r"\tilde{x}=\frac{x_R+x_L}{2},\qquad \tilde{y}=y")
         st.write("Choose this cut when the right and left boundaries are naturally written as functions of y. The integration limits are y-coordinates.")
-        st.latex(r"I_x=\int y^2[x_R-x_L]\,dy")
-        st.latex(r"I_y=\int\frac{x_R^3-x_L^3}{3}\,dy")
+        st.markdown("##### How the second-moment formulas are obtained")
+        st.write("For the moment about the x-axis, every point in the thin horizontal strip is at approximately the same y-coordinate. Starting from the definition:")
+        st.latex(r"I_x=\int_A y^2\,dA")
+        st.latex(r"dI_x=y^2dA=y^2[x_R(y)-x_L(y)]dy")
+        st.latex(r"I_x=\int_c^d y^2[x_R(y)-x_L(y)]\,dy")
+        st.write("For the moment about the y-axis, x varies through the full width of the strip. Use dA = dx dy and integrate first from x_L to x_R:")
+        st.latex(r"dI_y=\int_{x_L}^{x_R}x^2\,dx\,dy")
+        st.latex(r"dI_y=\left[\frac{x^3}{3}\right]_{x_L}^{x_R}dy=\frac{x_R^3-x_L^3}{3}dy")
+        st.latex(r"I_y=\int_c^d\frac{x_R^3-x_L^3}{3}\,dy")
 
     st.markdown("### 3. Area, centroid, and centroidal axes")
     c1, c2 = st.columns(2, gap="large")
@@ -388,27 +402,38 @@ def render_learn_tab():
         unsafe_allow_html=True,
     )
 
-    st.markdown("### 4. Fully worked teaching example")
-    example = solve_vertical(4 - x, 0, 0, 4)
+    st.markdown("### 4. Fully worked teaching examples")
+    st.write("The same triangular region is solved twice below. The vertical and horizontal strip methods must give identical final area properties.")
+
+    st.markdown("#### Example A: Vertical-strip solution")
+    example_v = solve_vertical(4 - x, 0, 0, 4)
     left, right = st.columns(2, gap="large")
     with left:
-        render_static_diagram(example, "Example: triangular region under y = 4 - x", True)
+        render_static_diagram(example_v, "Vertical strip for y = 4 - x", True)
     with right:
-        st.write("The region lies below y = 4 - x, above y = 0, from x = 0 to x = 4.")
-        st.markdown("**Step 1: Differential strip**")
-        st.latex(r"dA=[(4-x)-0]dx=(4-x)dx")
-        st.markdown("**Step 2: Strip centroid**")
-        st.latex(r"\tilde{x}=x,\qquad\tilde{y}=\frac{(4-x)+0}{2}=\frac{4-x}{2}")
-        st.markdown("**Step 3: Area**")
-        st.latex(r"A=\int_0^4(4-x)dx=8")
-        st.markdown("**Step 4: Complete-area centroid**")
-        st.latex(r"\bar{x}=\frac{\int_0^4x(4-x)dx}{8}=\frac{4}{3}")
-        st.latex(r"\bar{y}=\frac{\int_0^4\frac{4-x}{2}(4-x)dx}{8}=\frac{4}{3}")
-        st.markdown("**Step 5: Second moments about the shown axes**")
-        st.latex(r"I_x=\int_0^4\frac{(4-x)^3}{3}dx=\frac{64}{3}")
-        st.latex(r"I_y=\int_0^4x^2(4-x)dx=\frac{64}{3}")
-        st.success("Check: the centroid lies inside the triangle and second-moment units are length to the fourth power.")
+        st.write("Region: below y = 4 - x, above y = 0, from x = 0 to x = 4.")
+        st.latex(r"dA=(4-x)dx,\\qquad \\tilde{x}=x,\\qquad \\tilde{y}=\\frac{4-x}{2}")
+        st.latex(r"A=\\int_0^4(4-x)dx=8")
+        st.latex(r"\\bar{x}=\\frac{\\int_0^4x(4-x)dx}{\\int_0^4(4-x)dx}=\\frac43")
+        st.latex(r"\\bar{y}=\\frac{\\int_0^4\\frac{4-x}{2}(4-x)dx}{\\int_0^4(4-x)dx}=\\frac43")
+        st.latex(r"I_y=\\int_0^4x^2(4-x)dx=\\frac{64}{3}")
+        st.latex(r"I_x=\\int_0^4\\frac{(4-x)^3}{3}dx=\\frac{64}{3}")
 
+    st.markdown("#### Example B: Horizontal-strip solution of the same region")
+    # y = 4 - x rearranges to x = 4 - y. Thus x_R=4-y and x_L=0, 0<=y<=4.
+    example_h = solve_horizontal(4 - y, 0, 0, 4)
+    left, right = st.columns(2, gap="large")
+    with left:
+        render_static_diagram(example_h, "Horizontal strip for x = 4 - y", True)
+    with right:
+        st.write("Rearrange y = 4 - x as x = 4 - y. The right boundary is x_R = 4 - y and the left boundary is x_L = 0.")
+        st.latex(r"dA=(4-y)dy,\\qquad \\tilde{x}=\\frac{4-y}{2},\\qquad \\tilde{y}=y")
+        st.latex(r"A=\\int_0^4(4-y)dy=8")
+        st.latex(r"\\bar{x}=\\frac{\\int_0^4\\frac{4-y}{2}(4-y)dy}{\\int_0^4(4-y)dy}=\\frac43")
+        st.latex(r"\\bar{y}=\\frac{\\int_0^4y(4-y)dy}{\\int_0^4(4-y)dy}=\\frac43")
+        st.latex(r"I_x=\\int_0^4y^2(4-y)dy=\\frac{64}{3}")
+        st.latex(r"I_y=\\int_0^4\\frac{(4-y)^3}{3}dy=\\frac{64}{3}")
+        st.success("Independent check passed: both cutting directions give A = 8, x̄ = 4/3, ȳ = 4/3, Ix = 64/3, and Iy = 64/3.")
 
 def render_detailed_solution(problem):
     data = problem["data"]
@@ -452,12 +477,20 @@ def render_detailed_solution(problem):
 
     st.markdown("### Step 6: Calculate second moments about the shown axes")
     if vertical:
-        st.write("For Iy, the thin strip is located at x. For Ix, integrate through the full strip depth from yB to yT.")
+        st.write("Start from Ix = ∫A y²dA and Iy = ∫A x²dA. For a vertical strip, dA = dy dx.")
+        st.write("Because x is effectively constant across the thin strip:")
+        st.latex(r"dI_y=x^2dA=x^2(y_T-y_B)dx")
         st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}x^2[y_T-y_B]dx={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
+        st.write("For Ix, y changes from yB to yT inside the strip, so perform the inner y-integration first:")
+        st.latex(r"dI_x=\int_{y_B}^{y_T}y^2dy\,dx=\frac{y_T^3-y_B^3}{3}dx")
         st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{y_T^3-y_B^3}}{{3}}dx={sp.latex(data['i_x'])}\;\mathrm{{units}}^4")
     else:
-        st.write("For Ix, the thin strip is located at y. For Iy, integrate through the full strip width from xL to xR.")
+        st.write("Start from Ix = ∫A y²dA and Iy = ∫A x²dA. For a horizontal strip, dA = dx dy.")
+        st.write("Because y is effectively constant across the thin strip:")
+        st.latex(r"dI_x=y^2dA=y^2(x_R-x_L)dy")
         st.latex(rf"I_x=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}y^2[x_R-x_L]dy={sp.latex(data['i_x'])}\;\mathrm{{units}}^4")
+        st.write("For Iy, x changes from xL to xR inside the strip, so perform the inner x-integration first:")
+        st.latex(r"dI_y=\int_{x_L}^{x_R}x^2dx\,dy=\frac{x_R^3-x_L^3}{3}dy")
         st.latex(rf"I_y=\int_{{{sp.latex(data['lower'])}}}^{{{sp.latex(data['upper'])}}}\frac{{x_R^3-x_L^3}}{{3}}dy={sp.latex(data['i_y'])}\;\mathrm{{units}}^4")
 
     st.markdown("### Step 7: Shift to centroidal axes when required")
@@ -498,7 +531,7 @@ data = problem["data"]
 st.sidebar.caption(f"Current problem: {problem['title']}")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Colour key")
-st.sidebar.markdown("🔵 Complete region  \n🟧 Differential strip  \n🟣 Strip centroid  \n❌ Complete-area centroid")
+st.sidebar.markdown("🔵 Complete region  \n🔷 Upper / right boundary  \n🟢 Lower / left boundary  \n🟧 Differential strip  \n🟣 Strip centroid  \n❌ Complete-area centroid  \n⚫ Reference x- and y-axes")
 
 labels = {
     "area": ("Area A", "units²"),
